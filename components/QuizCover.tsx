@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { Coins, Cpu, Eye, KeyRound, Layers, Lock, Shield, Sparkles, type LucideIcon } from "lucide-react";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -19,15 +22,27 @@ const VARIANTS = [
 
 export function QuizCover({
   icon = "shield",
+  cover,
   index = 0,
   className = "",
   big = false,
 }: {
   icon?: string;
+  /** Yüklenen kapak fotoğrafı; yoksa ikonlu düz kapak gösterilir */
+  cover?: string | null;
   index?: number;
   className?: string;
   big?: boolean;
 }) {
+  const [broken, setBroken] = useState(false);
+  if (cover && !broken) {
+    return (
+      <div className={`relative overflow-hidden bg-input ${className}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={cover} alt="" loading="lazy" onError={() => setBroken(true)} className="absolute inset-0 h-full w-full object-cover" />
+      </div>
+    );
+  }
   const Icon = ICONS[icon] ?? Shield;
   const v = VARIANTS[index % VARIANTS.length];
   return (

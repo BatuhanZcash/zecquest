@@ -41,6 +41,7 @@ export function parseQuizJson(raw: string): EditableQuiz[] {
       title,
       description: q.description ? text(q.description) : null,
       icon: typeof q.icon === "string" ? q.icon : "shield",
+      cover_url: typeof q.cover_url === "string" ? q.cover_url : null,
       tags: Array.isArray(q.tags) ? q.tags.map(String).slice(0, 6) : [],
       default_time: Number(q.default_time ?? q.defaultTime ?? 20) || 20,
       questions: q.questions.map((x: any) => ({

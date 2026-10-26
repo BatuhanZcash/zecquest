@@ -9,12 +9,13 @@ import { useAuth, useRequireAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { api } from "@/lib/api";
 import { slugify } from "@/lib/quizImport";
+import { CoverUpload } from "@/components/CoverUpload";
 import { Alert, BackButton, ErrorBox, Field, PageLoader, Shape, Spinner, StatusChip, ANSWER_STYLES } from "@/components/ui";
 import type { EditableQuiz, LocalText, QuizStatus } from "@/lib/types";
 
 type Bi = { tr: string; en: string };
 type Q = { text: Bi; options: Bi[]; correct: number; time_limit: string; explanation: Bi; open: boolean };
-type Form = { id?: string; slug: string; title: Bi; description: Bi; icon: string; tags: string; default_time: number; status?: QuizStatus; review_note?: string | null; questions: Q[] };
+type Form = { id?: string; slug: string; title: Bi; description: Bi; icon: string; cover_url: string | null; tags: string; default_time: number; status?: QuizStatus; review_note?: string | null; questions: Q[] };
 
 const ICONS = ["shield", "coin", "key", "eye", "layers", "spark", "lock", "cpu"];
 const bi = (t: LocalText | null | undefined): Bi => (!t ? { tr: "", en: "" } : typeof t === "string" ? { tr: t, en: "" } : { tr: t.tr ?? "", en: t.en ?? "" });
@@ -28,6 +29,7 @@ function toForm(q: EditableQuiz): Form {
     title: bi(q.title),
     description: bi(q.description),
     icon: q.icon || "shield",
+    cover_url: q.cover_url ?? null,
     tags: (q.tags ?? []).join(", "),
     default_time: q.default_time ?? 20,
     status: q.status,
@@ -50,6 +52,7 @@ function fromForm(f: Form): EditableQuiz {
     title: out(f.title) ?? "",
     description: out(f.description),
     icon: f.icon,
+    cover_url: f.cover_url,
     tags: f.tags.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 6),
     default_time: f.default_time,
     questions: f.questions.map((q) => ({
@@ -70,7 +73,7 @@ export default function EditorPage() {
   const auth = useRequireAuth("creator");
   const { profile } = useAuth();
 
-  const [form, setForm] = useState<Form | null>(isNew ? { slug: "", title: { tr: "", en: "" }, description: { tr: "", en: "" }, icon: "shield", tags: "", default_time: 20, questions: [emptyQ()] } : null);
+  const [form, setForm] = useState<Form | null>(isNew ? { slug: "", title: { tr: "", en: "" }, description: { tr: "", en: "" }, icon: "shield", cover_url: null, tags: "", default_time: 20, questions: [emptyQ()] } : null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -173,6 +176,12 @@ export default function EditorPage() {
 
       {/* ---------- Genel bilgiler ---------- */}
       <section className="card space-y-4 p-5 sm:p-6">
+        <div>
+          <span className="label mb-1.5 block">{t("cover_photo")}</span>
+          <div className="max-w-[560px]">
+            <CoverUpload value={form.cover_url} onChange={(url) => update((f) => (f.cover_url = url))} />
+          </div>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t("title_tr")}>
             <input

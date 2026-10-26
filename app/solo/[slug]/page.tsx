@@ -204,7 +204,7 @@ function Solo() {
           <BackButton href={`/quiz/${qz.slug}`} />
         </div>
         <div className="card overflow-hidden">
-          <QuizCover icon={qz.icon} index={hashIndex(qz.id)} className="h-36" />
+          <QuizCover icon={qz.icon} cover={qz.cover_url} index={hashIndex(qz.id)} className="h-36" />
           <div className="p-6">
             <span className="chip mb-2">{t("solo")}</span>
             <h1 className="mb-1 text-2xl font-bold">{lt(qz.title)}</h1>

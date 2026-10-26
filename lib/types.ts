@@ -29,6 +29,7 @@ export interface QuizCardData {
   title: LocalText;
   description: LocalText | null;
   icon: string;
+  cover_url?: string | null;
   tags: string[];
   featured: boolean;
   status: QuizStatus;
@@ -61,6 +62,7 @@ export interface EditableQuiz {
   title: LocalText;
   description: LocalText | null;
   icon: string;
+  cover_url?: string | null;
   tags: string[];
   default_time: number;
   status?: QuizStatus;

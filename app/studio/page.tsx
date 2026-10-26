@@ -75,7 +75,7 @@ function StudioCard({ q, onChange, onError }: { q: QuizCardData; onChange: () =>
 
   return (
     <div className="card flex flex-col overflow-hidden">
-      <QuizCover icon={q.icon} index={hashIndex(q.id)} className="h-24" />
+      <QuizCover icon={q.icon} cover={q.cover_url} index={hashIndex(q.id)} className="h-24" />
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-start gap-2">
           <h3 className="flex-1 font-semibold leading-snug">{lt(q.title)}</h3>

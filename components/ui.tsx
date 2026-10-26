@@ -76,7 +76,7 @@ export function QuizCard({ quiz, compact = false, href }: { quiz: QuizCardData; 
   const author = quiz.author?.display_name || quiz.author?.username || SITE.name;
   return (
     <Link href={href ?? `/quiz/${quiz.slug}`} className="group card block overflow-hidden transition-colors hover:border-[#CFCDC7]">
-      <QuizCover icon={quiz.icon} index={hashIndex(quiz.id)} className={compact ? "h-24" : "h-36"} />
+      <QuizCover icon={quiz.icon} cover={quiz.cover_url} index={hashIndex(quiz.id)} className={compact ? "h-24" : "h-36"} />
       <div className={compact ? "p-3" : "px-4 pb-4 pt-3"}>
         <h3 className={`truncate font-semibold ${compact ? "text-[14px]" : "text-[15px]"}`}>{lt(quiz.title)}</h3>
         <div className="mt-2 flex items-center gap-2 text-[13px] text-muted">

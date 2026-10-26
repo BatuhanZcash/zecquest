@@ -58,7 +58,7 @@ export default function QuizDetailPage() {
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
         <article className="card p-4 sm:p-6">
-          <QuizCover icon={quiz.icon} index={hashIndex(quiz.id)} big className="h-44 rounded-xl sm:h-72" />
+          <QuizCover icon={quiz.icon} cover={quiz.cover_url} index={hashIndex(quiz.id)} big className="h-44 rounded-xl sm:h-72" />
           <h1 className="mt-5 text-[26px] font-bold tracking-[-0.02em]">{lt(quiz.title)}</h1>
 
           <div className="my-5 flex items-center gap-3 border-y border-line py-4">

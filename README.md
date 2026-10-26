@@ -60,6 +60,7 @@ Dosya konana kadar arayüzde yerine sade bir "ZEC" rozeti görünür. Zcash tica
    2. `supabase/migrations/0002_profiles_quizzes.sql`
    3. `supabase/migrations/0003_game_engine.sql`
    4. `supabase/migrations/0004_solo_leaderboard_admin.sql`
+   5. `supabase/migrations/0005_quiz_covers.sql` (kapak fotoğrafları için Storage kovası `quiz-covers` ve izinleri)
 3. **Database → Extensions** → `pg_cron`'u aç, sonra `supabase/optional/cron.sql` dosyasını çalıştır. *(Önerilir: kimse bağlı değilken bile planlı yarışmalar zamanında ilerler.)*
 4. **Realtime → Settings**: "Allow public access" / public channels açık olmalı (varsayılan). Oyun durumu herkese açıktır; doğru cevap içermez.
 
@@ -106,6 +107,7 @@ npm run dev                  # http://localhost:3000
 
 ### Quiz eklemek
 - **Stüdyo → Yeni quiz:** iki dilli editör (soru, 2–4 seçenek, doğru cevap, açıklama, sıralama).
+- **Kapak fotoğrafı:** editörün en üstünden her quize özel fotoğraf yüklenir (JPG/PNG/WEBP). Tarayıcıda 16:9 olarak kırpılıp 1280×720 WEBP'ye küçültülür ve Supabase Storage'a (`quiz-covers`) kaydedilir. Fotoğraf yoksa ikonlu düz kapak gösterilir.
 - **Stüdyo → JSON içe aktar:** elinizdeki soruları toplu yüklemek için. Biçim: `samples/` klasörü (`_SABLON.json` şablon, diğerleri örnek). Tek quiz ya da quiz dizisi yapıştırılabilir; içe aktarılanlar taslak olarak gelir.
 - Üreticiler **İncelemeye gönder**ir; yöneticiler **Yönetim → İnceleme**'den onaylar/reddeder (ret sebebi yazara gösterilir). Yöneticinin kendi quizleri doğrudan yayınlanır.
 - Yayındaki bir quiz düzenlenirse tekrar incelemeye düşer. Başlamış oyunlar etkilenmez (oyun başlarken soruların kopyası alınır).
