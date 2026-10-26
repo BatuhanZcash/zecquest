@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import { JoinBox } from "@/components/JoinBox";
+import { HomeHero } from "@/components/HomeHero";
 import { LeaderboardPanel } from "@/components/LeaderboardPanel";
 import { EventRow } from "@/components/EventCard";
 import { QuizCard, QuizCardSkeleton } from "@/components/ui";
@@ -20,6 +21,8 @@ export default function HomePage() {
 
   return (
     <div className="space-y-8">
+      <HomeHero next={fixtures[0] ?? null} now={now} />
+
       {/* Öne çıkan quizler */}
       <section>
         <div className="mb-3 flex items-baseline justify-between">

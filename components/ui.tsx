@@ -4,7 +4,6 @@ import Link from "next/link";
 import { AlertTriangle, ArrowLeft, Loader2, Play } from "lucide-react";
 import { QuizCover } from "./QuizCover";
 import { useI18n } from "@/lib/i18n";
-import { flag } from "@/lib/countries";
 import type { QuizCardData } from "@/lib/types";
 import { SITE } from "@/lib/config";
 
@@ -47,16 +46,27 @@ export function Avatar({
       >
         {initials || "?"}
       </span>
-      {country && (
-        <span
-          className="absolute -bottom-0.5 -right-1 leading-none"
-          style={{ fontSize: Math.max(10, size * 0.34) }}
-          aria-hidden
-        >
-          {flag(country)}
-        </span>
+      {country && /^[A-Z]{2}$/.test(country) && (
+        <Flag code={country} size={Math.max(11, Math.round(size * 0.3))} className="absolute -bottom-0.5 -right-1 ring-2 ring-card" />
       )}
     </span>
+  );
+}
+
+/** Ülke bayrağı (görsel). Emoji bayraklar Windows'ta harf olarak göründüğü için SVG kullanılır. */
+export function Flag({ code, size = 14, className = "" }: { code?: string | null; size?: number; className?: string }) {
+  if (!code || !/^[A-Z]{2}$/.test(code)) return null;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`/flags/${code.toLowerCase()}.svg`}
+      alt={code}
+      width={Math.round((size * 4) / 3)}
+      height={size}
+      loading="lazy"
+      className={`inline-block shrink-0 rounded-[3px] object-cover align-[-0.15em] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] ${className}`}
+      style={{ width: Math.round((size * 4) / 3), height: size }}
+    />
   );
 }
 

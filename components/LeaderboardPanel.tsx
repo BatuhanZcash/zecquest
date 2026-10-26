@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Crown, Flag, Users, UsersRound } from "lucide-react";
-import { Avatar, SectionHead } from "./ui";
+import { Crown, Flag as FlagIcon, Users, UsersRound } from "lucide-react";
+import { Avatar, Flag, SectionHead } from "./ui";
 import { useI18n } from "@/lib/i18n";
 import { api } from "@/lib/api";
-import { countryName, flag } from "@/lib/countries";
+import { countryName } from "@/lib/countries";
 import type { GroupRow, LeaderRow } from "@/lib/types";
 
 export type Group = "player" | "country" | "team";
@@ -101,7 +101,7 @@ export function GroupTabs({ value, onChange }: { value: Group; onChange: (g: Gro
   const { t } = useI18n();
   const tabs: [Group, string, typeof Users][] = [
     ["player", t("players"), Users],
-    ["country", t("countries"), Flag],
+    ["country", t("countries"), FlagIcon],
     ["team", t("teams"), UsersRound],
   ];
   return (
@@ -141,7 +141,7 @@ export function LeaderboardPanel({ limit = 6 }: { limit?: number }) {
         <>
           <Podium top={rows.slice(0, 3)} />
           {rows.length > 3 && (
-            <ol className="mt-3 space-y-1.5 border-t border-dashed border-line pt-3">
+            <ol className="space-y-1.5 border-t border-line pt-3">
               {rows.slice(3, limit).map((r, i) => (
                 <RowItem key={r.key} rank={i + 4} r={r} />
               ))}
@@ -156,12 +156,12 @@ export function LeaderboardPanel({ limit = 6 }: { limit?: number }) {
   );
 }
 
-function RowIcon({ r, size }: { r: Row; size: number }) {
-  if (r.kind === "player") return <Avatar name={r.name} size={size} country={r.country} />;
+function RowIcon({ r, size, flagOnAvatar = true }: { r: Row; size: number; flagOnAvatar?: boolean }) {
+  if (r.kind === "player") return <Avatar name={r.name} size={size} country={flagOnAvatar ? r.country : null} />;
   if (r.kind === "country")
     return (
-      <span className="flex items-center justify-center rounded-full bg-input leading-none" style={{ width: size, height: size, fontSize: size * 0.55 }}>
-        {flag(r.country)}
+      <span className="flex items-center justify-center overflow-hidden rounded-full bg-input ring-1 ring-line" style={{ width: size, height: size }}>
+        <Flag code={r.country} size={Math.round(size * 0.75)} className="!rounded-none !shadow-none scale-[1.45]" />
       </span>
     );
   return (
@@ -171,35 +171,41 @@ function RowIcon({ r, size }: { r: Row; size: number }) {
   );
 }
 
+const PODIUM_STYLE: Record<number, { h: string; block: string; num: string; ring: string }> = {
+  1: { h: "h-[68px]", block: "bg-gradient-to-b from-zec to-[#E7A50F]", num: "text-[#1A1506]", ring: "ring-[3px] ring-zec" },
+  2: { h: "h-[48px]", block: "bg-gradient-to-b from-[#E4E4E7] to-[#C9CACF] dark:from-[#4A4A50] dark:to-[#38383D]", num: "text-[#3F3F46] dark:text-[#E4E4E7]", ring: "ring-2 ring-[#D4D4D8] dark:ring-[#55555b]" },
+  3: { h: "h-[36px]", block: "bg-gradient-to-b from-[#EBC9A6] to-[#D6A579] dark:from-[#6B4B33] dark:to-[#563B27]", num: "text-[#6B4320] dark:text-[#F3D3B5]", ring: "ring-2 ring-[#E2B78F] dark:ring-[#7A5539]" },
+};
+
 export function Podium({ top }: { top: Row[] }) {
   const { fmt } = useI18n();
   const order = [top[1], top[0], top[2]];
   const ranks = [2, 1, 3];
   return (
-    <div className="grid grid-cols-3 items-end gap-2 pt-3">
-      {order.map((p, i) =>
-        p ? (
-          <Wrap key={p.key} href={p.href} className="flex min-w-0 flex-col items-center text-center">
+    <div className="grid grid-cols-3 items-end gap-2 pt-6">
+      {order.map((p, i) => {
+        const rank = ranks[i];
+        const st = PODIUM_STYLE[rank];
+        if (!p) return <div key={i} />;
+        return (
+          <Wrap key={p.key} href={p.href} className="group flex min-w-0 flex-col items-center text-center">
             <div className="relative">
-              {ranks[i] === 1 && <Crown className="absolute -top-5 left-1/2 z-10 h-5 w-5 -translate-x-1/2 fill-zec text-accent" />}
-              <div className={ranks[i] === 1 ? "rounded-full ring-[3px] ring-zec ring-offset-2 ring-offset-card" : ""}>
-                <RowIcon r={p} size={ranks[i] === 1 ? 60 : 46} />
+              {rank === 1 && <Crown className="absolute -top-6 left-1/2 h-5 w-5 -translate-x-1/2 fill-zec text-zec" />}
+              <div className={`rounded-full ring-offset-2 ring-offset-card ${st.ring}`}>
+                <RowIcon r={p} size={rank === 1 ? 56 : 44} flagOnAvatar={false} />
               </div>
-              <span
-                className={`absolute -bottom-1.5 left-1/2 flex h-5 w-5 -translate-x-1/2 items-center justify-center rounded-full text-[10px] font-bold ${
-                  ranks[i] === 1 ? "bg-zec text-[#1A1506]" : "bg-elevated text-ink ring-1 ring-line"
-                }`}
-              >
-                {ranks[i]}
-              </span>
             </div>
-            <p className="mt-3 w-full truncate text-sm font-semibold">{p.name}</p>
-            <p className="tabular-nums text-sm font-bold text-accent">{fmt(p.score)}</p>
+            <p className="mt-2.5 flex w-full min-w-0 items-center justify-center gap-1 px-0.5 text-[13px] font-semibold leading-tight">
+              {p.kind === "player" && <Flag code={p.country} size={10} />}
+              <span className="truncate group-hover:text-accent">{p.name}</span>
+            </p>
+            <p className="mt-0.5 tabular-nums text-[13px] font-bold text-accent">{fmt(p.score)}</p>
+            <div className={`mt-2 flex w-full items-start justify-center rounded-t-[10px] pt-1.5 ${st.h} ${st.block}`}>
+              <span className={`text-[18px] font-extrabold leading-none ${st.num}`}>{rank}</span>
+            </div>
           </Wrap>
-        ) : (
-          <div key={i} />
-        )
-      )}
+        );
+      })}
     </div>
   );
 }

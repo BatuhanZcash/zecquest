@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
+  ArrowUpRight,
   Compass,
   Download,
   Gamepad2,
@@ -143,10 +144,22 @@ function Sidebar({ pathname }: { pathname: string }) {
             {t("install_app")}
           </button>
         )}
-        <a href={SITE.promo.href} target="_blank" rel="noreferrer" className="block rounded-xl bg-[#1A1A1A] p-4 text-white transition-colors hover:bg-[#262626] dark:bg-input dark:hover:bg-[#2e2e2e]">
-          <ZcashMark size={28} />
-          <p className="mt-3 text-[14px] font-semibold leading-tight dark:text-ink">{lt(SITE.promo.title)}</p>
-          <p className="mt-1 text-[12px] leading-snug text-white/60 dark:text-muted">{lt(SITE.promo.body)}</p>
+        <a
+          href={SITE.promo.href}
+          target="_blank"
+          rel="noreferrer"
+          className="group relative block overflow-hidden rounded-xl border border-zec/30 bg-tint p-3.5 transition hover:border-zec/70"
+        >
+          <span aria-hidden className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-zec/20 blur-2xl" />
+          <div className="relative flex items-center gap-2.5">
+            <ZcashMark size={30} />
+            <div className="min-w-0 flex-1">
+              <p className="text-[13.5px] font-semibold leading-tight text-ink">{lt(SITE.promo.title)}</p>
+              <p className="text-[12px] font-medium text-accent">z.cash</p>
+            </div>
+            <ArrowUpRight className="h-4 w-4 shrink-0 text-accent transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+          </div>
+          <p className="relative mt-2 text-[12px] leading-snug text-muted">{lt(SITE.promo.body)}</p>
         </a>
       </div>
     </>
@@ -308,7 +321,6 @@ function Footer() {
           </a>
         </div>
       </div>
-      <p className="mt-3 text-xs text-soft">{t("footer_disclaimer")}</p>
     </footer>
   );
 }

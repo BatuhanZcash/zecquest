@@ -187,4 +187,3 @@ Teknolojiler: Next.js 14, React 18, Tailwind CSS, Supabase (Postgres, Auth, Real
 
 Tasarım: açık tema varsayılan (koyu tema düğmeyle), Plus Jakarta Sans, Zcash altını yalnızca ana eylemlerde. Renk tokenları `app/globals.css` içinde.
 
-*Bağımsız bir topluluk projesidir; Electric Coin Co. veya Zcash Foundation ile resmi bağı yoktur.*

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { COUNTRY_CODES, countryName, flag } from "@/lib/countries";
+import { COUNTRY_CODES, countryName } from "@/lib/countries";
 import { useI18n } from "@/lib/i18n";
 
 export function CountrySelect({ value, onChange, required }: { value: string; onChange: (v: string) => void; required?: boolean }) {
@@ -18,7 +18,7 @@ export function CountrySelect({ value, onChange, required }: { value: string; on
       <option value="">{t("select_country")}</option>
       {options.map(({ c, n }) => (
         <option key={c} value={c}>
-          {flag(c)} {n}
+          {n}
         </option>
       ))}
     </select>

@@ -30,10 +30,25 @@ const dict = {
   hero_kicker: { tr: "Global canlı yarışmalar", en: "Global live competitions" },
   hero_title: { tr: "Zcash bilgini kanıtla.\nDünyayla yarış.", en: "Prove your Zcash knowledge.\nCompete with the world." },
   hero_sub: {
-    tr: "Planlanmış canlı yarışmalara her yerden katıl. Sorular herkese aynı anda gelir; hızlı ve doğru cevap veren kazanır.",
+    tr: "Canlı yarışmalara her yerden katıl. Sorular herkese aynı anda gelir; en hızlı ve doğru cevap veren kazanır.",
     en: "Join scheduled live competitions from anywhere. Everyone gets the questions at the same time; fast, correct answers win.",
   },
   hero_cta_events: { tr: "Yarışmaları gör", en: "See competitions" },
+  hero_title_a: { tr: "Zcash bilgini kanıtla,", en: "Prove your Zcash knowledge," },
+  hero_title_b: { tr: "dünyayla canlı yarış.", en: "compete live with the world." },
+  hero_cta_signup: { tr: "Ücretsiz katıl", en: "Join for free" },
+  hero_f_time: { tr: "Her soruya {n} saniye", en: "{n} seconds per question" },
+  hero_f_global: { tr: "Dünya çapında", en: "Worldwide" },
+  hero_f_prize: { tr: "ZEC ödülleri", en: "ZEC prizes" },
+  hero_join_lobby: { tr: "Bekleme odasına gir", en: "Enter the lobby" },
+  next_competition: { tr: "Sıradaki yarışma", en: "Next competition" },
+  cd_days: { tr: "gün", en: "days" },
+  cd_hours: { tr: "saat", en: "hrs" },
+  cd_minutes: { tr: "dk", en: "min" },
+  cd_seconds: { tr: "sn", en: "sec" },
+  demo_label: { tr: "Örnek soru · 1 / 10", en: "Sample question · 1 / 10" },
+  demo_hint: { tr: "Hızlı cevap = daha çok puan", en: "Faster answer = more points" },
+  demo_reveal: { tr: "Doğru! 21 milyon ZEC, tıpkı Bitcoin gibi.", en: "Correct! 21 million ZEC, just like Bitcoin." },
   hero_cta_explore: { tr: "Quizlerle pratik yap", en: "Practice with quizzes" },
   stat_players: { tr: "oyuncu", en: "players" },
   stat_countries: { tr: "ülke", en: "countries" },
@@ -346,10 +361,6 @@ const dict = {
 
   /* ---------- Footer ---------- */
   footer_rights: { tr: "Zcash topluluğu için geliştirildi.", en: "Built for the Zcash community." },
-  footer_disclaimer: {
-    tr: "Bağımsız bir topluluk projesidir; Electric Coin Co. veya Zcash Foundation ile resmi bağı yoktur.",
-    en: "An independent community project, not officially affiliated with Electric Coin Co. or the Zcash Foundation.",
-  },
   terms: { tr: "Kullanım Koşulları", en: "Terms of Use" },
   privacy: { tr: "Gizlilik", en: "Privacy" },
 } satisfies Record<string, { tr: string; en: string }>;

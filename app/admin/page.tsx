@@ -22,8 +22,8 @@ import { useRequireAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { api, type AdminUser, type EventInput } from "@/lib/api";
 import { useAsync } from "@/lib/useAsync";
-import { countryName, flag } from "@/lib/countries";
-import { Alert, Avatar, ErrorBox, Field, PageLoader, Spinner, StatusChip } from "@/components/ui";
+import { countryName } from "@/lib/countries";
+import { Alert, Avatar, ErrorBox, Flag, Field, PageLoader, Spinner, StatusChip } from "@/components/ui";
 import { PrizeStatusChip } from "@/components/PrizeStatusChip";
 import { formatCode } from "@/components/JoinBox";
 import type { PrizeClaim, QuizCardData } from "@/lib/types";
@@ -464,7 +464,7 @@ function UsersTab() {
                   {u.display_name} {u.username && <Link href={`/u/${u.username}`} className="tabular-nums text-sm text-muted hover:text-accent">@{u.username}</Link>}
                 </p>
                 <p className="text-xs text-soft">
-                  {u.email} · {u.country ? `${flag(u.country)} ${countryName(u.country, lang)}` : ""} {u.team ? `· ${u.team}` : ""}
+                  {u.email} · {u.country ? <><Flag code={u.country} size={11} /> {countryName(u.country, lang)}</> : ""} {u.team ? `· ${u.team}` : ""}
                 </p>
                 {u.creator_request_at && u.role === "player" && <p className="mt-1 rounded-lg bg-tint p-2 text-sm">{u.creator_request_note}</p>}
               </div>
@@ -539,7 +539,7 @@ function Prizes() {
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-zec tabular-nums font-bold text-[#1A1506]">{c.place}</span>
                 <div className="min-w-0 flex-1">
                   <p className="font-medium">
-                    {c.user?.display_name} <span className="tabular-nums text-sm text-muted">@{c.user?.username}</span> {flag(c.user?.country)}
+                    {c.user?.display_name} <span className="tabular-nums text-sm text-muted">@{c.user?.username}</span> <Flag code={c.user?.country} size={13} />
                   </p>
                   <p className="text-xs text-soft">
                     {lt(c.game.title)} · {lt(c.game.prize)}

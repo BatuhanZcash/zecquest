@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Crown, Globe2, Hash, Radio, Settings, Star, Trophy, User } from "lucide-react";
-import { Avatar, ErrorBox, PageLoader } from "@/components/ui";
+import { Avatar, ErrorBox, Flag, PageLoader } from "@/components/ui";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { useAsync } from "@/lib/useAsync";
-import { countryName, flag } from "@/lib/countries";
+import { countryName } from "@/lib/countries";
 
 export default function ProfilePage() {
   const { username } = useParams<{ username: string }>();
@@ -33,7 +33,7 @@ export default function ProfilePage() {
             <div className="mt-2 flex flex-wrap gap-2 text-sm">
               {p.country && (
                 <span className="chip normal-case tracking-normal">
-                  {flag(p.country)} {countryName(p.country, lang)}
+                  <Flag code={p.country} size={13} /> {countryName(p.country, lang)}
                 </span>
               )}
               {p.team && <span className="chip normal-case tracking-normal">{p.team}</span>}

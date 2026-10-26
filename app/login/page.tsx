@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { LogoMark } from "@/components/Logo";
+import { SITE } from "@/lib/config";
 import { Alert, Spinner } from "@/components/ui";
 
 export default function LoginPage() {
@@ -95,15 +96,19 @@ function Login() {
 
           {step === "email" ? (
             <>
-              <button onClick={google} disabled={busy} className="btn-ghost w-full">
-                <GoogleIcon />
-                {t("continue_google")}
-              </button>
-              <div className="flex items-center gap-3 text-[13px] text-soft">
-                <span className="h-px flex-1 bg-line" />
-                {t("or")}
-                <span className="h-px flex-1 bg-line" />
-              </div>
+              {SITE.googleAuth && (
+                <>
+                  <button onClick={google} disabled={busy} className="btn-ghost w-full">
+                    <GoogleIcon />
+                    {t("continue_google")}
+                  </button>
+                  <div className="flex items-center gap-3 text-[13px] text-soft">
+                    <span className="h-px flex-1 bg-line" />
+                    {t("or")}
+                    <span className="h-px flex-1 bg-line" />
+                  </div>
+                </>
+              )}
               <form onSubmit={sendCode} className="space-y-3">
                 <label className="block">
                   <span className="label mb-1.5 block">{t("email")}</span>

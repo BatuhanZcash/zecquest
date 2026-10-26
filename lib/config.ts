@@ -9,6 +9,8 @@ export const SITE = {
     zcashMark: "/brand/zcash-mark.svg",
     zcashMarkWhite: "/brand/zcash-mark-white.svg",
   },
+  /** Google ile giriş: Supabase'de Google sağlayıcısını açtıktan sonra NEXT_PUBLIC_GOOGLE_AUTH=1 yapın */
+  googleAuth: process.env.NEXT_PUBLIC_GOOGLE_AUTH === "1",
   tagline: { tr: "Global Zcash bilgi yarışması", en: "The global Zcash knowledge competition" },
   /** Yayındaki adres (katılım linki, QR ve paylaşım için). Boşsa tarayıcının adresi kullanılır. */
   publicUrl: process.env.NEXT_PUBLIC_SITE_URL || "",
