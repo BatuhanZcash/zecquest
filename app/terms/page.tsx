@@ -11,8 +11,8 @@ export default function TermsPage() {
         {
           h: { tr: "Hizmet", en: "The service" },
           p: {
-            tr: "ZecQuest, Zcash hakkında bilgi yarışmaları düzenleyen bağımsız bir topluluk platformudur. Hizmet olduğu gibi sunulur.",
-            en: "ZecQuest is an independent community platform that runs Zcash knowledge competitions. The service is provided as is.",
+            tr: "ZecLearn, Zcash hakkında bilgi yarışmaları düzenleyen bağımsız bir topluluk platformudur. Hizmet olduğu gibi sunulur.",
+            en: "ZecLearn is an independent community platform that runs Zcash knowledge competitions. The service is provided as is.",
           },
         },
         {

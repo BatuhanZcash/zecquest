@@ -1,6 +1,6 @@
 {
-  "name": "ZecQuest — Live Zcash Quiz",
-  "short_name": "ZecQuest",
+  "name": "ZecLearn — Live Zcash Quiz",
+  "short_name": "ZecLearn",
   "description": "Global live Zcash quiz competitions. Join from anywhere, answer in real time, win ZEC prizes.",
   "id": "/",
   "start_url": "/?source=pwa",

@@ -1,9 +1,9 @@
-/* ZecQuest service worker
+/* ZecLearn service worker
  * - Uygulamayı kurulabilir yapar ve statik dosyaları önbelleğe alır (hızlı açılış)
  * - API / Supabase isteklerine ASLA dokunmaz: oyun verisi her zaman canlıdır
  * - Çevrimdışıyken sayfa açılmaya çalışılırsa basit bir çevrimdışı ekranı gösterir
  */
-const VERSION = "zq-v2";
+const VERSION = "zq-v3";
 const STATIC = `${VERSION}-static`;
 const OFFLINE_URL = "/offline.html";
 

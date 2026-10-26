@@ -3,7 +3,7 @@
  */
 export const SITE = {
   /** Uygulama adı — henüz kesinleşmedi; değiştirmek için burayı ve public/manifest.webmanifest'i güncelleyin */
-  name: "ZecQuest",
+  name: "ZecLearn",
   /** Resmi Zcash logosu dosyaları (README → "Marka") */
   brand: {
     zcashMark: "/brand/zcash-mark.svg",

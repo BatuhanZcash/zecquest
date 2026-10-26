@@ -1,4 +1,4 @@
-# ZecQuest (geçici ad) — Global canlı Zcash bilgi yarışması
+# ZecLearn — Global canlı Zcash bilgi yarışması
 
 Dünyanın her yerinden oyuncuların aynı anda katıldığı, sunucu yönetimli canlı Zcash yarışmaları.
 Web sitesi + telefona kurulabilir uygulama (PWA).
@@ -72,7 +72,7 @@ Dosya konana kadar arayüzde yerine sade bir "ZEC" rozeti görünür. Zcash tica
 
 **E-posta ile kod (OTP)** — *Authentication → Emails → Magic Link* şablonuna kodu ekle:
 ```html
-<h2>ZecQuest giriş kodun</h2>
+<h2>ZecLearn giriş kodun</h2>
 <p>Kodun: <strong>{{ .Token }}</strong></p>
 <p>Ya da bu bağlantıya tıkla: <a href="{{ .ConfirmationURL }}">Giriş yap</a></p>
 ```
