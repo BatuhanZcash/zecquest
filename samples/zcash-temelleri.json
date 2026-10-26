@@ -1,0 +1,105 @@
+{
+  "id": "zcash-temelleri",
+  "title": {
+    "tr": "Zcash Temelleri",
+    "en": "Zcash Fundamentals"
+  },
+  "description": {
+    "tr": "ÖRNEK QUIZ — Zcash'in ne olduğu, nasıl çalıştığı ve temel kavramlar.",
+    "en": "SAMPLE QUIZ — What Zcash is, how it works and its core concepts."
+  },
+  "icon": "shield",
+  "tags": [
+    "Temeller"
+  ],
+  "author": "ZecQuest",
+  "featured": true,
+  "questions": [
+    {
+      "text": {
+        "tr": "Zcash ana ağı hangi yıl başlatıldı?",
+        "en": "In which year did the Zcash mainnet launch?"
+      },
+      "options": [
+        "2014",
+        "2016",
+        "2018",
+        "2020"
+      ],
+      "correct": 1,
+      "explanation": {
+        "tr": "Zcash Ekim 2016'da yayına girdi.",
+        "en": "Zcash launched in October 2016."
+      }
+    },
+    {
+      "text": {
+        "tr": "Zcash'in gizliliği hangi kriptografik teknolojiye dayanır?",
+        "en": "Which cryptographic technology powers Zcash privacy?"
+      },
+      "options": [
+        "Ring signatures",
+        "zk-SNARKs",
+        "Mixers",
+        "Stealth only"
+      ],
+      "correct": 1
+    },
+    {
+      "text": {
+        "tr": "Şeffaf (transparent) Zcash adresleri hangi harfle başlar?",
+        "en": "Transparent Zcash addresses start with which letter?"
+      },
+      "options": [
+        "t",
+        "z",
+        "u",
+        "0x"
+      ],
+      "correct": 0
+    },
+    {
+      "text": {
+        "tr": "Unified Address (birleşik adres) hangi ön ekle başlar?",
+        "en": "Which prefix does a Unified Address start with?"
+      },
+      "options": [
+        "zs",
+        "t1",
+        "u1",
+        "bc1"
+      ],
+      "correct": 2
+    },
+    {
+      "text": {
+        "tr": "Zcash madenciliğinde kullanılan iş ispatı algoritması hangisidir?",
+        "en": "Which proof-of-work algorithm does Zcash mining use?"
+      },
+      "options": [
+        "SHA-256",
+        "Ethash",
+        "Equihash",
+        "Scrypt"
+      ],
+      "correct": 2
+    },
+    {
+      "text": {
+        "tr": "En küçük ZEC birimine ne ad verilir?",
+        "en": "What is the smallest unit of ZEC called?"
+      },
+      "options": [
+        "Satoshi",
+        "Zatoshi",
+        "Wei",
+        "Zec-cent"
+      ],
+      "correct": 1,
+      "explanation": {
+        "tr": "1 ZEC = 100.000.000 zatoshi.",
+        "en": "1 ZEC = 100,000,000 zatoshis."
+      }
+    }
+  ]
+}

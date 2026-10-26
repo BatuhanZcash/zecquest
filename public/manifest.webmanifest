@@ -1,0 +1,59 @@
+{
+  "name": "ZecQuest — Live Zcash Quiz",
+  "short_name": "ZecQuest",
+  "description": "Global live Zcash quiz competitions. Join from anywhere, answer in real time, win ZEC prizes.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F6F6F4",
+  "theme_color": "#F6F6F4",
+  "categories": [
+    "games",
+    "education",
+    "finance"
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Join Game",
+      "short_name": "Join",
+      "url": "/join",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Live Events",
+      "short_name": "Events",
+      "url": "/events",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

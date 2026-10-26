@@ -1,0 +1,120 @@
+{
+  "id": "gizlilik",
+  "title": {
+    "tr": "Gizlilik & Shielded İşlemler",
+    "en": "Privacy & Shielded Transactions"
+  },
+  "description": {
+    "tr": "ÖRNEK QUIZ — Shielded işlemler, görüntüleme anahtarları ve Halo 2.",
+    "en": "SAMPLE QUIZ — Shielded transactions, viewing keys and Halo 2."
+  },
+  "icon": "eye",
+  "tags": [
+    "Gizlilik"
+  ],
+  "author": "ZecQuest",
+  "featured": true,
+  "questions": [
+    {
+      "text": {
+        "tr": "Tamamen shielded bir işlemde hangisi gizlenir?",
+        "en": "What is hidden in a fully shielded transaction?"
+      },
+      "options": [
+        {
+          "tr": "Sadece tutar",
+          "en": "Only the amount"
+        },
+        {
+          "tr": "Sadece alıcı",
+          "en": "Only the receiver"
+        },
+        {
+          "tr": "Gönderen, alıcı ve tutar",
+          "en": "Sender, receiver and amount"
+        },
+        {
+          "tr": "Hiçbiri",
+          "en": "Nothing"
+        }
+      ],
+      "correct": 2
+    },
+    {
+      "text": {
+        "tr": "Görüntüleme anahtarı (viewing key) ne işe yarar?",
+        "en": "What is a viewing key for?"
+      },
+      "options": [
+        {
+          "tr": "Fon harcamak",
+          "en": "Spending funds"
+        },
+        {
+          "tr": "İşlem geçmişine salt-okunur erişim vermek",
+          "en": "Granting read-only access to transaction history"
+        },
+        {
+          "tr": "Madencilik yapmak",
+          "en": "Mining"
+        },
+        {
+          "tr": "Cüzdanı sıfırlamak",
+          "en": "Resetting the wallet"
+        }
+      ],
+      "correct": 1
+    },
+    {
+      "text": {
+        "tr": "Halo 2 kanıt sistemi neye olan ihtiyacı ortadan kaldırdı?",
+        "en": "What did the Halo 2 proving system remove the need for?"
+      },
+      "options": [
+        {
+          "tr": "Güvenilir kurulum (trusted setup)",
+          "en": "A trusted setup"
+        },
+        {
+          "tr": "Madenciler",
+          "en": "Miners"
+        },
+        {
+          "tr": "Blok zinciri",
+          "en": "The blockchain"
+        },
+        {
+          "tr": "İşlem ücretleri",
+          "en": "Transaction fees"
+        }
+      ],
+      "correct": 0
+    },
+    {
+      "text": {
+        "tr": "Shielded işlemlerde gönderilebilen şifreli not alanına ne denir?",
+        "en": "What is the encrypted note field in shielded transactions called?"
+      },
+      "options": [
+        "Memo",
+        "Tag",
+        "Label",
+        "Hash"
+      ],
+      "correct": 0
+    },
+    {
+      "text": {
+        "tr": "Sapling ağ yükseltmesi hangi yıl etkinleşti?",
+        "en": "In which year did the Sapling network upgrade activate?"
+      },
+      "options": [
+        "2016",
+        "2017",
+        "2018",
+        "2022"
+      ],
+      "correct": 2
+    }
+  ]
+}

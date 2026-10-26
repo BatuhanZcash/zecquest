@@ -1,0 +1,45 @@
+{
+  "id": "benzersiz-quiz-kimligi",
+  "title": {
+    "tr": "Quiz başlığı",
+    "en": "Quiz title"
+  },
+  "description": {
+    "tr": "Kısa açıklama",
+    "en": "Short description"
+  },
+  "icon": "shield",
+  "tags": [
+    "Etiket"
+  ],
+  "author": "Kulüp adı",
+  "featured": false,
+  "questions": [
+    {
+      "text": {
+        "tr": "Soru metni (Türkçe)",
+        "en": "Question text (English)"
+      },
+      "options": [
+        {
+          "tr": "Seçenek A",
+          "en": "Option A"
+        },
+        {
+          "tr": "Seçenek B",
+          "en": "Option B"
+        },
+        "Her iki dilde aynıysa düz yazı da olur",
+        {
+          "tr": "Seçenek D",
+          "en": "Option D"
+        }
+      ],
+      "correct": 0,
+      "explanation": {
+        "tr": "İsteğe bağlı açıklama",
+        "en": "Optional explanation"
+      }
+    }
+  ]
+}

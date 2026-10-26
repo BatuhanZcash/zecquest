@@ -1,0 +1,87 @@
+{
+  "id": "zec-ekonomisi",
+  "title": {
+    "tr": "ZEC Ekonomisi",
+    "en": "ZEC Economics"
+  },
+  "description": {
+    "tr": "ÖRNEK QUIZ — Arz, halving ve blok süresi.",
+    "en": "SAMPLE QUIZ — Supply, halving and block time."
+  },
+  "icon": "coin",
+  "tags": [
+    "Ekonomi"
+  ],
+  "author": "ZecQuest",
+  "featured": true,
+  "questions": [
+    {
+      "text": {
+        "tr": "Toplam ZEC arzının üst sınırı nedir?",
+        "en": "What is the maximum ZEC supply?"
+      },
+      "options": [
+        "18 milyon",
+        "21 milyon",
+        "100 milyon",
+        {
+          "tr": "Sınırsız",
+          "en": "Unlimited"
+        }
+      ],
+      "correct": 1
+    },
+    {
+      "text": {
+        "tr": "Zcash'te hedeflenen blok süresi kaç saniyedir?",
+        "en": "What is Zcash's target block time?"
+      },
+      "options": [
+        "10 sn",
+        "75 sn",
+        "150 sn",
+        "600 sn"
+      ],
+      "correct": 1
+    },
+    {
+      "text": {
+        "tr": "Blok ödülü yaklaşık kaç yılda bir yarıya iner?",
+        "en": "Roughly how often is the block reward halved?"
+      },
+      "options": [
+        "1",
+        "2",
+        "4",
+        "10"
+      ],
+      "correct": 2
+    },
+    {
+      "text": {
+        "tr": "Zcash'in borsa sembolü nedir?",
+        "en": "What is Zcash's ticker?"
+      },
+      "options": [
+        "ZCH",
+        "ZEC",
+        "ZSH",
+        "ZCS"
+      ],
+      "correct": 1
+    },
+    {
+      "text": {
+        "tr": "Kasım 2024 halving'inden sonra blok ödülü kaç ZEC oldu?",
+        "en": "What did the block reward become after the November 2024 halving?"
+      },
+      "options": [
+        "6.25",
+        "3.125",
+        "1.5625",
+        "0.78125"
+      ],
+      "correct": 2
+    }
+  ]
+}
