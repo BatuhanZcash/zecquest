@@ -172,7 +172,7 @@ const dict = {
   description: { tr: "Açıklama", en: "Description" },
   quiz_leaderboard: { tr: "Quiz Liderliği", en: "Quiz Leaderboard" },
   not_found: { tr: "Bulunamadı.", en: "Not found." },
-  draft_preview: { tr: "Önizleme: bu quiz henüz yayında değil.", en: "Preview: this quiz isn't published yet." },
+  draft_preview: { tr: "Bu quiz henüz Keşfet'te listelenmiyor. Yine de onunla hemen canlı oda açabilirsin.", en: "This quiz isn't listed in Explore yet. You can still host a live room with it right away." },
 
   /* ---------- Oyun (ortak) ---------- */
   answer_rule: { tr: "Her soruya cevap süresi {n} saniye. Hızlı doğru cevap daha çok puan getirir.", en: "You have {n} seconds per question. Faster correct answers earn more points." },

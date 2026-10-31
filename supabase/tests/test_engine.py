@@ -97,6 +97,8 @@ res = rpc(creator, "save_quiz", p={"slug": "zcash-test", "title": {"tr": "Zcash 
 qid = res["id"]
 check("taslak herkese görünmez", rpc(None, "get_quiz", p_slug="zcash-test") is None)
 check("yazar taslağını görür", rpc(creator, "get_quiz", p_slug="zcash-test")["question_count"] == 3)
+check("organizatör onay beklemeden kendi taslağıyla oda açabilir", rpc(creator, "get_quiz", p_slug="zcash-test")["can_host"] is True
+      and "code" in rpc(creator, "create_hosted_game", p_quiz_id=qid))
 check("geçersiz doğru cevap reddedilir",
       "invalid_correct" in (err(creator, "save_quiz", p={"slug": "bad-one", "title": "x",
                             "questions": [{"text": "t", "options": ["a", "b"], "correct": 5}]}) or ""))

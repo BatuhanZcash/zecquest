@@ -105,7 +105,7 @@ function StudioCard({ q, onChange, onError }: { q: QuizCardData; onChange: () =>
               {isAdmin ? t("publish") : t("submit_review")}
             </button>
           )}
-          {q.status === "published" && (
+          {q.question_count > 0 && (
             <button
               onClick={() => act("host", async () => router.push(`/host/${(await api.createHostedGame(q.id)).id}`))}
               disabled={!!busy}
