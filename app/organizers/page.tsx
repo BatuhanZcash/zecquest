@@ -75,7 +75,7 @@ const FAQ: { q: T; a: T }[] = [
 ];
 
 export default function OrganizersPage() {
-  const { t, lt } = useI18n();
+  const { t, lt, lang } = useI18n();
   const cta = useOrganizerCta();
 
   return (
@@ -111,7 +111,7 @@ export default function OrganizersPage() {
               </div>
               <figure className={`overflow-hidden rounded-2xl border border-line bg-app ${shot.phone ? "mx-auto w-[220px] rounded-[28px] border-[6px] border-[#14161B]" : ""}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={shot.src} alt={lt(shot.alt)} loading="lazy" className="block w-full" />
+                <img src={lang === "en" ? shot.src.replace("/guide/", "/guide/en/") : shot.src} alt={lt(shot.alt)} loading="lazy" className="block w-full" />
               </figure>
             </li>
           );

@@ -6,7 +6,7 @@ type Theme = "dark" | "light";
 const Ctx = createContext<{ theme: Theme; toggle: () => void }>({ theme: "dark", toggle: () => {} });
 
 /** Sayfa ilk boyanmadan temayı uygular (beyaz flaşı önler). layout.tsx içinde <head>'e eklenir. */
-export const themeInitScript = `try{var t=localStorage.getItem('zq-theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme='light'}`;
+export const themeInitScript = `try{var t=localStorage.getItem('zq-theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme='light'}try{var l=localStorage.getItem('zq-lang');if(l==='tr'||l==='en')document.documentElement.lang=l}catch(e){}`;
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("light");
