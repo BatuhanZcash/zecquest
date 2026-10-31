@@ -113,6 +113,14 @@ npm run dev                  # http://localhost:3000
 - Üreticiler **İncelemeye gönder**ir; yöneticiler **Yönetim → İnceleme**'den onaylar/reddeder (ret sebebi yazara gösterilir). Yöneticinin kendi quizleri doğrudan yayınlanır.
 - Yayındaki bir quiz düzenlenirse tekrar incelemeye düşer. Başlamış oyunlar etkilenmez (oyun başlarken soruların kopyası alınır).
 
+### Organizatörler
+- Topluluk yöneticileri profillerinden **Organizatör ol** başvurusu yapar; yönetici **Yönetim → Kullanıcılar → Organizatör başvuruları**'ndan onaylar.
+- Organizatörler Stüdyo'da quiz hazırlar (boş, hazır şablondan kopya ya da JSON) ve kendi quizleriyle hemen canlı oda açabilir. Keşfet'te listelenmek için incelemeye gönderilir.
+- Rehber sayfası: `/organizers` (ekran görüntüleri `public/guide/`).
+
+### Ödüllü planlı yarışmalar (kapalı)
+`lib/config.ts` → `SITE.competitions = false`. Kapalıyken yarışma sayfası, ödüller, Zcash adresi alanı ve yönetimdeki yarışma/ödül bölümleri arayüzde gizlenir. Veritabanı fonksiyonları yerinde durur; açmak için değeri `true` yapın.
+
 ### Misafir girişi (anlık odalar)
 - **Authentication → Sign In / Providers → "Allow anonymous sign-ins"** açık olmalı. **Rate Limits → anonymous users** değerini yükselt (aynı Wi-Fi'deki bir salon tek IP sayılır).
 - Oda kodunu ya da QR'ı açan kişi hesap açmadan, sadece takma adla anlık odaya katılır.

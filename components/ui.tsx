@@ -75,22 +75,28 @@ export function QuizCard({ quiz, compact = false, href }: { quiz: QuizCardData; 
   const { t, lt } = useI18n();
   const author = quiz.author?.display_name || quiz.author?.username || SITE.name;
   return (
-    <Link href={href ?? `/quiz/${quiz.slug}`} className="group card block overflow-hidden transition-colors hover:border-[#CFCDC7]">
-      <QuizCover icon={quiz.icon} cover={quiz.cover_url} index={hashIndex(quiz.id)} className={compact ? "h-24" : "h-36"} />
-      <div className={compact ? "p-3" : "px-4 pb-4 pt-3"}>
-        <h3 className={`truncate font-semibold ${compact ? "text-[14px]" : "text-[15px]"}`}>{lt(quiz.title)}</h3>
-        <div className="mt-2 flex items-center gap-2 text-[13px] text-muted">
-          <Avatar name={author} size={20} />
-          <span className="truncate">{author}</span>
-        </div>
+    <Link href={href ?? `/quiz/${quiz.slug}`} className="group block rounded-[20px] bg-card p-2 ring-1 ring-line transition hover:ring-[rgb(var(--soft))]">
+      <div className="relative">
+        <QuizCover icon={quiz.icon} cover={quiz.cover_url} index={hashIndex(quiz.id)} className={`rounded-[14px] ${compact ? "h-24" : "aspect-[16/10]"}`} />
         {!compact && (
-          <div className="mt-3 flex items-center gap-4 border-t border-line pt-3 text-[13px] text-muted">
-            <span>{t("questions_n", { n: quiz.question_count })}</span>
-            <span className="inline-flex items-center gap-1">
-              <Play className="h-3.5 w-3.5" /> {t("plays_n", { n: quiz.plays })}
-            </span>
-          </div>
+          <span className="absolute left-2.5 top-2.5 rounded-full bg-white/95 px-2.5 py-1 text-[12px] font-semibold text-[#14161B] shadow-sm">
+            {t("questions_n", { n: quiz.question_count })}
+          </span>
         )}
+      </div>
+      <div className={compact ? "px-1.5 pb-1.5 pt-2.5" : "px-2 pb-2 pt-3"}>
+        <h3 className={`font-display font-bold leading-snug tracking-[-0.01em] ${compact ? "truncate text-[14px]" : "line-clamp-2 min-h-[2.6em] text-[16.5px]"}`}>{lt(quiz.title)}</h3>
+        <div className="mt-2 flex items-center justify-between gap-3 text-[13px] text-muted">
+          <span className="flex min-w-0 items-center gap-2">
+            <Avatar name={author} size={20} />
+            <span className="truncate">{author}</span>
+          </span>
+          {!compact && (
+            <span className="inline-flex shrink-0 items-center gap-1">
+              <Play className="h-3.5 w-3.5" /> {quiz.plays}
+            </span>
+          )}
+        </div>
       </div>
     </Link>
   );
@@ -98,9 +104,9 @@ export function QuizCard({ quiz, compact = false, href }: { quiz: QuizCardData; 
 
 export function QuizCardSkeleton() {
   return (
-    <div className="card overflow-hidden">
-      <div className="h-36 animate-pulse bg-input" />
-      <div className="space-y-2 p-4">
+    <div className="rounded-[20px] bg-card p-2 ring-1 ring-line">
+      <div className="aspect-[16/10] animate-pulse rounded-[14px] bg-input" />
+      <div className="space-y-2 p-2 pt-3">
         <div className="h-4 w-2/3 animate-pulse rounded bg-input" />
         <div className="h-3 w-1/3 animate-pulse rounded bg-input" />
       </div>
@@ -121,20 +127,20 @@ export function BackButton({ href = "/" }: { href?: string }) {
 
 /* ---------- Cevap butonları ---------- */
 export const ANSWER_STYLES = [
-  { cls: "bg-zec text-[#1A1506]", shadow: "#B07A08", shape: "triangle" },
-  { cls: "bg-[#1A1A1A] text-white", shadow: "#000000", shape: "diamond" },
-  { cls: "bg-[#E8742A] text-white", shadow: "#A64A12", shape: "circle" },
-  { cls: "bg-[#F3E9D2] text-[#2A1F08]", shadow: "#BFAE86", shape: "square" },
+  { cls: "bg-zec text-[#14161B]", badge: "bg-[#14161B]/10", shape: "a" },
+  { cls: "bg-[#14161B] text-white dark:bg-[#E9EBEF] dark:text-[#14161B]", badge: "bg-white/15 dark:bg-[#14161B]/10", shape: "b" },
+  { cls: "bg-[#2F6FED] text-white", badge: "bg-white/20", shape: "c" },
+  { cls: "bg-[#12A387] text-white", badge: "bg-white/20", shape: "d" },
 ] as const;
 
+const LETTERS: Record<string, string> = { a: "A", b: "B", c: "C", d: "D" };
+
+/** Cevap harfi (A–D) rozeti */
 export function Shape({ shape, className = "" }: { shape: string; className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-      {shape === "triangle" && <path className="fill-current" d="M12 3 22 20H2z" />}
-      {shape === "diamond" && <path className="fill-current" d="M12 2 22 12 12 22 2 12z" />}
-      {shape === "circle" && <circle className="fill-current" cx="12" cy="12" r="10" />}
-      {shape === "square" && <rect className="fill-current" x="3" y="3" width="18" height="18" rx="3" />}
-    </svg>
+    <span aria-hidden="true" className={`inline-flex shrink-0 items-center justify-center rounded-lg font-display text-[0.95em] font-extrabold leading-none ${className}`}>
+      {LETTERS[shape] ?? "?"}
+    </span>
   );
 }
 
@@ -159,14 +165,13 @@ export function AnswerButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      style={{ boxShadow: dim ? "none" : `0 4px 0 0 ${s.shadow}` }}
-      className={`relative flex w-full items-center gap-4 rounded-xl2 px-5 text-left font-semibold transition-[transform,opacity,box-shadow] duration-150 enabled:active:translate-y-[4px] enabled:active:!shadow-none ${s.cls} ${
+      className={`relative flex w-full items-center gap-4 rounded-2xl px-4 text-left font-semibold transition-[transform,opacity] duration-150 enabled:hover:brightness-[1.04] enabled:active:scale-[0.985] ${s.cls} ${
         size === "lg" ? "min-h-[96px] text-xl sm:text-2xl" : size === "fill" ? "h-full min-h-[72px] text-lg" : "min-h-[72px] text-base sm:text-lg"
       } ${dim ? "opacity-30" : ""} ${
-        state === "correct" ? "scale-[1.02] outline outline-4 outline-offset-2 outline-emerald-400" : ""
-      } ${state === "picked" ? "outline outline-4 outline-offset-2 outline-white/80" : ""} disabled:cursor-default`}
+        state === "correct" ? "outline outline-4 outline-offset-2 outline-emerald-400" : ""
+      } ${state === "picked" ? "outline outline-4 outline-offset-2 outline-zec" : ""} disabled:cursor-default`}
     >
-      <Shape shape={s.shape} className="h-7 w-7 shrink-0" />
+      <Shape shape={s.shape} className={`h-9 w-9 text-lg ${s.badge}`} />
       <span className="leading-snug">{label}</span>
       {state === "correct" && (
         <span className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-emerald-500 px-2 py-0.5 text-xs font-bold text-white">

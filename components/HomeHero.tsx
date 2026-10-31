@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, Check, Gift, Globe2, Radio, Timer, Zap } from "lucide-react";
-import { ZcashMark } from "./Logo";
+import { ArrowRight, Check, Gift, Globe2, Radio, Timer, Users, Zap } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
-import { ANSWER_SECS } from "@/lib/config";
+import { ANSWER_SECS, SITE } from "@/lib/config";
 import type { GameState } from "@/lib/types";
 
 type Ev = GameState & { player_count?: number };
@@ -20,61 +19,48 @@ export function HomeHero({ next, now }: { next: Ev | null; now: number }) {
   const { session } = useAuth();
 
   return (
-    <section className="relative overflow-hidden rounded-[20px] bg-[#14120D] text-white ring-1 ring-black/5 dark:ring-zec/20">
-      {/* Arka plan: altın parıltılar ve ince ızgara */}
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-24 -top-32 h-80 w-80 rounded-full bg-zec/25 blur-[90px]" />
-        <div className="absolute -bottom-40 right-10 h-96 w-96 rounded-full bg-zec/15 blur-[110px]" />
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(244,183,40,.9) 1px, transparent 1px), linear-gradient(90deg, rgba(244,183,40,.9) 1px, transparent 1px)",
-            backgroundSize: "44px 44px",
-            maskImage: "radial-gradient(ellipse at 70% 40%, black 10%, transparent 70%)",
-            WebkitMaskImage: "radial-gradient(ellipse at 70% 40%, black 10%, transparent 70%)",
-          }}
-        />
-        <div className="absolute -right-16 top-1/2 hidden -translate-y-1/2 opacity-[0.06] xl:block">
-          <ZcashMark size={420} />
-        </div>
-      </div>
+    <section className="relative overflow-hidden rounded-[28px] bg-zec text-[#14161B]">
 
-      <div className="relative grid items-center gap-8 px-6 py-8 sm:px-10 sm:py-11 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+      <div className="relative grid items-center gap-10 px-6 py-9 sm:px-10 sm:py-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:px-14 lg:py-14">
         <div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-zec/30 bg-zec/10 px-3 py-1 text-[12.5px] font-semibold text-zec">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-zec opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-zec" />
-            </span>
-            {t("hero_kicker")}
-          </span>
-          <h1 className="mt-4 whitespace-pre-line text-[32px] font-extrabold leading-[1.08] tracking-[-0.03em] sm:text-[44px]">
-            {t("hero_title_a")} <span className="text-zec">{t("hero_title_b")}</span>
+          <p className="text-[15px] font-semibold text-[#14161B]/70">{t("hero_kicker")}</p>
+          <h1 className="font-display mt-3 text-[38px] font-extrabold leading-[1.02] tracking-[-0.035em] sm:text-[54px] lg:text-[60px]">
+            {t("hero_title_a")} {t("hero_title_b")}
           </h1>
-          <p className="mt-4 max-w-[520px] text-[15px] leading-relaxed text-white/65 sm:text-[16px]">{t("hero_sub")}</p>
+          <p className="mt-5 max-w-[500px] text-[16px] leading-relaxed text-[#14161B]/75 sm:text-[17px]">{t("hero_sub")}</p>
 
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link href={session ? "/events" : "/login?next=%2Fevents"} className="btn-zec px-5 py-3 text-[15px]">
-              {session ? t("hero_cta_events") : t("hero_cta_signup")}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+          <div className="mt-7 flex flex-wrap gap-3">
+            {SITE.competitions ? (
+              <Link href={session ? "/events" : "/login?next=%2Fevents"} className="btn bg-[#14161B] px-6 py-3 text-[15px] text-white hover:bg-[#2A2E37]">
+                {session ? t("hero_cta_events") : t("hero_cta_signup")}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : (
+              <Link href="/join" className="btn bg-[#14161B] px-6 py-3 text-[15px] text-white hover:bg-[#2A2E37]">
+                <Zap className="h-4 w-4" />
+                {t("hero_cta_join")}
+              </Link>
+            )}
             <Link
-              href="/explore"
-              className="inline-flex items-center justify-center gap-2 rounded-[12px] border border-white/15 bg-white/[0.06] px-5 py-3 text-[15px] font-semibold text-white transition hover:bg-white/[0.12]"
+              href={SITE.competitions ? "/explore" : "/organizers"}
+              className="btn border-2 border-[#14161B] px-6 py-[10px] text-[15px] text-[#14161B] hover:bg-[#14161B]/[0.07]"
             >
-              {t("hero_cta_explore")}
+              {SITE.competitions ? t("hero_cta_explore") : t("hero_cta_host")}
             </Link>
           </div>
 
-          <ul className="mt-7 grid max-w-[540px] grid-cols-1 gap-2.5 text-[13.5px] text-white/80 sm:grid-cols-3">
+          <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-[14px] font-medium text-[#14161B]/80">
             <Feature icon={<Timer className="h-4 w-4" />} text={t("hero_f_time", { n: ANSWER_SECS })} />
             <Feature icon={<Globe2 className="h-4 w-4" />} text={t("hero_f_global")} />
-            <Feature icon={<Gift className="h-4 w-4" />} text={t("hero_f_prize")} />
+            {SITE.competitions ? (
+              <Feature icon={<Gift className="h-4 w-4" />} text={t("hero_f_prize")} />
+            ) : (
+              <Feature icon={<Users className="h-4 w-4" />} text={t("hero_f_community")} />
+            )}
           </ul>
         </div>
 
-        <div className="relative">{next ? <NextEventCard ev={next} now={now} /> : <DemoQuestion />}</div>
+        <div className="relative">{next && SITE.competitions ? <NextEventCard ev={next} now={now} /> : <DemoQuestion />}</div>
       </div>
     </section>
   );
@@ -83,7 +69,7 @@ export function HomeHero({ next, now }: { next: Ev | null; now: number }) {
 function Feature({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <li className="flex items-center gap-2">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-zec/15 text-zec">{icon}</span>
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#14161B]/10">{icon}</span>
       <span className="leading-tight">{text}</span>
     </li>
   );
@@ -150,12 +136,7 @@ const DEMO = {
   opts: ["21M ZEC", "42M ZEC", "100M ZEC", "∞"],
   correct: 0,
 };
-const OPT_STYLE = [
-  "bg-[#F4B728] text-[#1A1506]",
-  "bg-[#3B82F6] text-white",
-  "bg-[#10B981] text-white",
-  "bg-[#E8742A] text-white",
-];
+const OPT_STYLE = ["bg-zec text-[#14161B]", "bg-[#14161B] text-white", "bg-[#2F6FED] text-white", "bg-[#12A387] text-white"];
 
 function DemoQuestion() {
   const { t, lang } = useI18n();
@@ -174,7 +155,7 @@ function DemoQuestion() {
   const pct = revealed ? 0 : 100 - (ms / total) * 100;
 
   return (
-    <div className="mx-auto w-full max-w-[400px] rotate-[1.5deg] rounded-2xl bg-white p-4 text-[#161513] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.6)] ring-1 ring-black/5 transition-transform hover:rotate-0 sm:p-5">
+    <div className="mx-auto w-full max-w-[400px] rounded-3xl bg-white p-5 text-[#14161B] shadow-[0_24px_50px_-24px_rgba(60,40,0,0.55)] sm:p-6">
       <div className="flex items-center justify-between text-[12px] font-semibold text-[#6B6A66]">
         <span>{t("demo_label")}</span>
         <span
@@ -195,12 +176,13 @@ function DemoQuestion() {
           return (
             <div
               key={o}
-              className={`flex h-12 items-center justify-center gap-1.5 rounded-xl text-[15px] font-bold transition ${OPT_STYLE[i]} ${
+              className={`flex h-12 items-center gap-2 rounded-xl px-3 text-[15px] font-bold transition ${OPT_STYLE[i]} ${
                 dim ? "opacity-25" : ""
               } ${revealed && i === DEMO.correct ? "ring-4 ring-[#10B981]/40" : ""}`}
             >
-              {revealed && i === DEMO.correct && <Check className="h-4 w-4" />}
+              <span className="font-display text-[13px] opacity-60">{"ABCD"[i]}</span>
               {o}
+              {revealed && i === DEMO.correct && <Check className="ml-auto h-4 w-4" />}
             </div>
           );
         })}

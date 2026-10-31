@@ -1,5 +1,6 @@
 "use client";
 
+import { Redirect } from "@/components/Redirect";
 import Link from "next/link";
 import { useState } from "react";
 import { ExternalLink, Gift, Shield } from "lucide-react";
@@ -12,7 +13,7 @@ import { Alert, PageLoader, Spinner } from "@/components/ui";
 import type { PrizeClaim } from "@/lib/types";
 import { PrizeStatusChip } from "@/components/PrizeStatusChip";
 
-export default function MyPrizesPage() {
+function MyPrizesPageInner() {
   const { t } = useI18n();
   const auth = useRequireAuth();
   const { data, loading, setData } = useAsync(() => (auth.ok ? api.myPrizes() : Promise.resolve(null)), [auth.ok]);
@@ -111,4 +112,9 @@ function PrizeCard({ c, onUpdate }: { c: PrizeClaim; onUpdate: (d: PrizeClaim[])
       )}
     </div>
   );
+}
+
+/** Ödüllü yarışmalar kapalıyken (SITE.competitions) bu sayfa gösterilmez */
+export default function MyPrizesPage() {
+  return SITE.competitions ? <MyPrizesPageInner /> : <Redirect to="/me" />;
 }

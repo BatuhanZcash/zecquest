@@ -20,7 +20,7 @@ export default function ResultsPage() {
   const [copied, setCopied] = useState(false);
 
   if (loading && !data) return <PageLoader />;
-  if (!data) return <ErrorBox message={t("err_game_not_found")} action={<Link href="/events" className="btn-ghost">{t("nav_events")}</Link>} />;
+  if (!data) return <ErrorBox message={t("err_game_not_found")} action={<Link href="/" className="btn-ghost">{t("nav_home")}</Link>} />;
 
   const title = lt(data.title) || lt(data.quiz?.title);
   const me = data.me;

@@ -11,22 +11,22 @@ export default function PrivacyPage() {
         {
           h: { tr: "Topladığımız veriler", en: "What we collect" },
           p: {
-            tr: "E-posta adresiniz (giriş için), kullanıcı adınız, görünen adınız, ülkeniz, isteğe bağlı takım/üniversite bilginiz, oyun skorlarınız ve — ödül kazanırsanız — Zcash adresiniz.",
-            en: "Your email address (for sign-in), username, display name, country, optional team/university, game scores and — if you win a prize — your Zcash address.",
+            tr: "E-posta adresiniz (giriş için), kullanıcı adınız, görünen adınız, ülkeniz, isteğe bağlı takım/üniversite bilginiz, ve oyun skorlarınız. Misafir olarak katılırsanız yalnızca takma adınız ve o oyundaki skorunuz tutulur.",
+            en: "Your email address (for sign-in), username, display name, country, optional team/university, game scores.",
           },
         },
         {
           h: { tr: "Herkese açık olanlar", en: "What is public" },
           p: {
-            tr: "Kullanıcı adınız, görünen adınız, ülkeniz, takımınız ve skorlarınız liderlik tablolarında ve profil sayfanızda görünür. E-posta ve Zcash adresiniz asla herkese açık değildir; yalnızca siz ve yöneticiler görebilir.",
-            en: "Your username, display name, country, team and scores appear on leaderboards and your profile page. Your email and Zcash address are never public; only you and admins can see them.",
+            tr: "Kullanıcı adınız, görünen adınız, ülkeniz, takımınız ve skorlarınız liderlik tablolarında ve profil sayfanızda görünür. E-posta adresiniz asla herkese açık değildir; yalnızca siz ve yöneticiler görebilir.",
+            en: "Your username, display name, country, team and scores appear on leaderboards and your profile page. Your email address is never public; only you and admins can see them.",
           },
         },
         {
           h: { tr: "Gizlilik yaklaşımı", en: "Our approach" },
           p: {
             tr: "Zcash'in ruhuna uygun olarak gereğinden fazla veri toplamıyoruz, reklam takibi yapmıyoruz ve verilerinizi satmıyoruz. Ödüller için shielded (u1/zs) adres kullanmanızı öneririz.",
-            en: "In the spirit of Zcash we collect no more than necessary, run no ad tracking and never sell your data. We recommend a shielded (u1/zs) address for prizes.",
+            en: "In the spirit of Zcash we collect no more than necessary, run no ad tracking and never sell your data.",
           },
         },
         {

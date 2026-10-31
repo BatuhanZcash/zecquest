@@ -6,31 +6,31 @@
    Açık tema varsayılan. Altın yalnızca ana eylemlerde ve aktif durumda kullanılır. */
 :root,
 [data-theme="light"] {
-  --bg-app: 246 246 244;
+  --bg-app: 242 243 245;
   --bg-card: 255 255 255;
   --bg-elevated: 255 255 255;
-  --bg-input: 244 244 242;
-  --line: 230 229 225;
-  --ink: 22 21 19;
-  --muted: 107 106 102;
-  --soft: 150 148 143;
-  --tint: 254 246 222;
-  --primary-ink: 26 21 6;
-  --accent: 150 102 0;
+  --bg-input: 236 238 242;
+  --line: 223 226 232;
+  --ink: 20 22 27;
+  --muted: 91 97 112;
+  --soft: 137 143 156;
+  --tint: 255 243 210;
+  --primary-ink: 20 22 27;
+  --accent: 140 97 0;
   color-scheme: light;
 }
 
 [data-theme="dark"] {
-  --bg-app: 20 20 20;
-  --bg-card: 28 28 28;
-  --bg-elevated: 34 34 34;
-  --bg-input: 38 38 38;
-  --line: 46 46 46;
-  --ink: 240 239 236;
-  --muted: 163 161 156;
-  --soft: 120 118 114;
-  --tint: 52 42 16;
-  --primary-ink: 26 21 6;
+  --bg-app: 15 17 21;
+  --bg-card: 23 26 32;
+  --bg-elevated: 29 33 40;
+  --bg-input: 32 36 44;
+  --line: 40 45 54;
+  --ink: 236 238 242;
+  --muted: 161 167 179;
+  --soft: 110 116 130;
+  --tint: 46 38 18;
+  --primary-ink: 20 22 27;
   --accent: 244 183 40;
   color-scheme: dark;
 }
@@ -39,10 +39,18 @@ html,
 body {
   background: rgb(var(--bg-app));
   color: rgb(var(--ink));
-  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-family: "Figtree Variable", system-ui, sans-serif;
   font-size: 15px;
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: "cv11", "ss01";
+}
+
+/* Başlıklar: karakterli grotesk */
+h1,
+h2,
+h3,
+.font-display {
+  font-family: "Bricolage Grotesque Variable", "Figtree Variable", system-ui, sans-serif;
+  font-optical-sizing: auto;
 }
 
 :focus-visible {
@@ -61,43 +69,29 @@ body {
 
 @layer components {
   .card {
-    @apply rounded-xl border border-line bg-card;
+    @apply rounded-2xl border border-line bg-card;
   }
 
   .btn {
-    @apply inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-[10px] px-4 py-2.5 text-[14px] font-semibold transition-[transform,box-shadow,background-color,border-color,color] duration-100 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 py-2.5 text-[14px] font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-zec:disabled,
   .btn-ink:disabled {
     background: rgb(var(--bg-input));
     color: rgb(var(--soft));
-    box-shadow: none;
     opacity: 1;
   }
-  .btn:not(:disabled):active {
-    transform: translateY(2px);
-    box-shadow: none !important;
-  }
 
-  /* Ana eylem — KnowNow'daki gibi ince alt kenar */
+  /* Ana eylem: Zcash altını, düz */
   .btn-zec {
-    @apply btn bg-zec text-[rgb(var(--primary-ink))] hover:bg-[#F7C142];
-    box-shadow: 0 3px 0 0 #c8920f;
+    @apply btn bg-zec text-[rgb(var(--primary-ink))] hover:bg-[#E5A812];
   }
-  /* İkincil eylem — siyah */
+  /* İkincil güçlü eylem: mürekkep */
   .btn-ink {
-    @apply btn bg-[#1A1A1A] text-white hover:bg-[#2B2B2B];
-    box-shadow: 0 3px 0 0 #000;
-  }
-  [data-theme="dark"] .btn-ink {
-    @apply bg-[#F0EFEC] text-[#1A1A1A] hover:bg-white;
-    box-shadow: 0 3px 0 0 #9a9893;
+    @apply btn bg-ink text-card hover:opacity-90;
   }
   .btn-ghost {
-    @apply btn border border-line bg-card text-ink hover:border-[#CFCDC7] hover:bg-input;
-  }
-  [data-theme="dark"] .btn-ghost {
-    @apply hover:border-[#444];
+    @apply btn border border-line bg-card text-ink hover:border-[rgb(var(--soft))];
   }
 
   /* Küçük durum rozeti (büyük harf değil) */
@@ -106,7 +100,7 @@ body {
   }
 
   .input {
-    @apply w-full rounded-[10px] border border-line bg-card px-3.5 py-2.5 text-[15px] text-ink outline-none transition placeholder:text-soft focus:border-zec focus:ring-2 focus:ring-zec/25;
+    @apply w-full rounded-xl border border-line bg-card px-3.5 py-2.5 text-[15px] text-ink outline-none transition placeholder:text-soft focus:border-zec focus:ring-2 focus:ring-zec/25;
   }
 
   /* Form/bölüm etiketi — cümle düzeninde, sakin */
@@ -115,11 +109,11 @@ body {
   }
 
   .section-title {
-    @apply text-[17px] font-semibold tracking-[-0.01em];
+    @apply font-display text-[19px] font-bold tracking-[-0.015em];
   }
 
   .page-title {
-    @apply text-[22px] font-bold tracking-[-0.02em];
+    @apply font-display text-[30px] font-extrabold leading-tight tracking-[-0.025em];
   }
 }
 

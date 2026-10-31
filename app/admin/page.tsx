@@ -19,6 +19,7 @@ import {
   Library,
 } from "lucide-react";
 import { useRequireAuth } from "@/lib/auth";
+import { SITE } from "@/lib/config";
 import { useI18n } from "@/lib/i18n";
 import { api, type AdminUser, type EventInput } from "@/lib/api";
 import { useAsync } from "@/lib/useAsync";
@@ -48,14 +49,14 @@ function Admin() {
   if (auth.forbidden) return <ErrorBox message={t("err_admin_required")} />;
   if (!auth.ok) return <PageLoader />;
 
-  const tabs: [Tab, string, typeof Users][] = [
+  const tabs = ([
     ["overview", t("tab_overview"), BarChart3],
     ["review", t("tab_review"), ListChecks],
-    ["events", t("tab_events"), CalendarClock],
+    ["events", SITE.competitions ? t("tab_events") : t("tab_rooms"), CalendarClock],
     ["users", t("tab_users"), Users],
     ["prizes", t("tab_prizes"), Gift],
     ["quizzes", t("tab_quizzes"), Library],
-  ];
+  ] as [Tab, string, typeof Users][]).filter(([k]) => SITE.competitions || k !== "prizes");
 
   return (
     <div className="space-y-5">
@@ -96,8 +97,12 @@ function Overview() {
     [t("status_pending"), data.quizzes_pending, "review"],
     [t("creator_requests"), data.creator_requests, "users"],
     [t("live_now"), data.games_live, "events"],
-    [t("upcoming"), data.events_upcoming, "events"],
-    [t("prize_pending"), data.prizes_pending, "prizes"],
+    ...(SITE.competitions
+      ? ([
+          [t("upcoming"), data.events_upcoming, "events"],
+          [t("prize_pending"), data.prizes_pending, "prizes"],
+        ] as [string, number, string?][])
+      : []),
     [`${t("plays")} (7d)`, data.plays_7d],
   ];
   return (
@@ -307,7 +312,8 @@ function Events() {
   };
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[400px_minmax(0,1fr)]">
+    <div className={`grid gap-5 ${SITE.competitions ? "lg:grid-cols-[400px_minmax(0,1fr)]" : ""}`}>
+      {SITE.competitions && (
       <form onSubmit={create} className="card h-fit space-y-4 p-5">
         <h2 className="font-semibold">{t("create_event")}</h2>
         {msg && <Alert kind={msg.kind}>{msg.text}</Alert>}
@@ -378,6 +384,7 @@ function Events() {
           {t("create_event")}
         </button>
       </form>
+      )}
 
       <div className="card divide-y divide-line">
         {!games.data ? (

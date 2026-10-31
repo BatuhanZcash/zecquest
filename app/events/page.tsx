@@ -1,5 +1,7 @@
 "use client";
 
+import { Redirect } from "@/components/Redirect";
+import { SITE } from "@/lib/config";
 import Link from "next/link";
 import { useEffect } from "react";
 import { CalendarDays } from "lucide-react";
@@ -11,7 +13,7 @@ import { useAsync } from "@/lib/useAsync";
 import { useServerNow } from "@/lib/useGame";
 import type { GameState } from "@/lib/types";
 
-export default function EventsPage() {
+function EventsPageInner() {
   const { t, te } = useI18n();
   const { data, error, loading, reload } = useAsync(() => api.listEvents(), []);
   const now = useServerNow(true, 1000);
@@ -64,4 +66,9 @@ export default function EventsPage() {
       )}
     </div>
   );
+}
+
+/** Ödüllü yarışmalar kapalıyken (SITE.competitions) bu sayfa gösterilmez */
+export default function EventsPage() {
+  return SITE.competitions ? <EventsPageInner /> : <Redirect to="/" />;
 }

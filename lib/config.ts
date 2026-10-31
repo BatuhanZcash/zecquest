@@ -11,6 +11,11 @@ export const SITE = {
   },
   /** Google ile giriş: Supabase'de Google sağlayıcısını açtıktan sonra NEXT_PUBLIC_GOOGLE_AUTH=1 yapın */
   googleAuth: process.env.NEXT_PUBLIC_GOOGLE_AUTH === "1",
+  /**
+   * Ödüllü planlı yarışmalar ve ZEC ödülleri. Kapalıyken arayüzde gizlenir;
+   * platform topluluk organizatörlerinin canlı odaları için kullanılır.
+   */
+  competitions: false,
   tagline: { tr: "Global Zcash bilgi yarışması", en: "The global Zcash knowledge competition" },
   /** Yayındaki adres (katılım linki, QR ve paylaşım için). Boşsa tarayıcının adresi kullanılır. */
   publicUrl: process.env.NEXT_PUBLIC_SITE_URL || "",

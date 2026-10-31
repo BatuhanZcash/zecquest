@@ -34,15 +34,14 @@ const config: Config = {
         accent: v("accent"),
       },
       fontFamily: {
-        sans: ["'Plus Jakarta Sans'", "system-ui", "sans-serif"],
+        sans: ["'Figtree Variable'", "system-ui", "sans-serif"],
+        display: ["'Bricolage Grotesque Variable'", "'Figtree Variable'", "system-ui", "sans-serif"],
       },
       borderRadius: {
         xl2: "12px",
       },
       boxShadow: {
-        // KnowNow'daki imza "3D" buton gölgesi, Zcash tonlarında
-        press: "0 3px 0 0 #C8920F",
-        pressInk: "0 3px 0 0 #000000",
+        press: "0 1px 2px rgb(20 22 27 / 0.12)",
         card: "0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -8px rgb(0 0 0 / 0.12)",
       },
       keyframes: {

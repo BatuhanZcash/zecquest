@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import "@fontsource-variable/bricolage-grotesque";
+import "@fontsource-variable/figtree";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n";
 import { ThemeProvider, themeInitScript } from "@/lib/theme";
@@ -8,11 +10,11 @@ import { ClientInit } from "@/components/ClientInit";
 import { SITE } from "@/lib/config";
 
 const description =
-  "Global live Zcash quiz competitions. Join from anywhere, answer in real time, climb the leaderboard and win ZEC prizes.";
+  "The Zcash community quiz platform. Join live quizzes with a room code or QR, answer in real time and climb the leaderboard.";
 
 export const metadata: Metadata = {
   metadataBase: SITE.publicUrl ? new URL(SITE.publicUrl) : undefined,
-  title: { default: `${SITE.name} — Live Zcash Quiz Competitions`, template: `%s · ${SITE.name}` },
+  title: { default: `${SITE.name} — Zcash Community Quizzes`, template: `%s · ${SITE.name}` },
   description,
   applicationName: SITE.name,
   manifest: "/manifest.webmanifest",
@@ -24,7 +26,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: SITE.name,
-    title: `${SITE.name} — Live Zcash Quiz Competitions`,
+    title: `${SITE.name} — Zcash Community Quizzes`,
     description,
     images: [{ url: "/og.png", width: 1200, height: 630 }],
   },
@@ -36,8 +38,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#141414" },
-    { media: "(prefers-color-scheme: light)", color: "#F6F6F4" },
+    { media: "(prefers-color-scheme: dark)", color: "#0F1115" },
+    { media: "(prefers-color-scheme: light)", color: "#F2F3F5" },
   ],
 };
 
@@ -46,13 +48,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="tr" data-theme="light" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
       </head>
       <body>
         <ThemeProvider>

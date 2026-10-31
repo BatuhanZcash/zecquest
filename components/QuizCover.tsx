@@ -14,10 +14,14 @@ const ICONS: Record<string, LucideIcon> = {
   cpu: Cpu,
 };
 
-/** Düz renkli kapaklar: altın ve siyah sırayla */
+/**
+ * Fotoğrafsız kapaklar: üç zemin (altın, mürekkep, buz grisi) üzerinde
+ * büyük, kenardan taşan çizgi ikon ve ince eğik çizgiler.
+ */
 const VARIANTS = [
-  { bg: "bg-zec", circle: "bg-white/35", icon: "text-[#1A1506]" },
-  { bg: "bg-[#1A1A1A] dark:bg-[#2A2A2A]", circle: "bg-white/10", icon: "text-zec" },
+  { bg: "bg-[#FBE3A4]", icon: "text-[#8C6100]", stripe: "rgba(140,97,0,0.10)" },
+  { bg: "bg-[#1C2027]", icon: "text-zec", stripe: "rgba(244,183,40,0.10)" },
+  { bg: "bg-[#DDE3EC] dark:bg-[#2A3140]", icon: "text-[#3B4658] dark:text-[#AFC0D8]", stripe: "rgba(59,70,88,0.10)" },
 ];
 
 export function QuizCover({
@@ -28,7 +32,7 @@ export function QuizCover({
   big = false,
 }: {
   icon?: string;
-  /** Yüklenen kapak fotoğrafı; yoksa ikonlu düz kapak gösterilir */
+  /** Yüklenen kapak fotoğrafı; yoksa ikonlu kapak gösterilir */
   cover?: string | null;
   index?: number;
   className?: string;
@@ -46,10 +50,15 @@ export function QuizCover({
   const Icon = ICONS[icon] ?? Shield;
   const v = VARIANTS[index % VARIANTS.length];
   return (
-    <div className={`flex items-center justify-center ${v.bg} ${className}`}>
-      <div className={`flex items-center justify-center rounded-full ${v.circle} ${big ? "h-36 w-36" : "h-[72px] w-[72px]"}`}>
-        <Icon strokeWidth={1.5} className={`${v.icon} ${big ? "h-16 w-16" : "h-8 w-8"}`} />
-      </div>
+    <div
+      className={`relative overflow-hidden ${v.bg} ${className}`}
+      style={{ backgroundImage: `repeating-linear-gradient(-35deg, ${v.stripe} 0 2px, transparent 2px 14px)` }}
+    >
+      <Icon
+        strokeWidth={1.25}
+        className={`absolute ${v.icon} ${big ? "-bottom-10 -right-6 h-64 w-64" : "-bottom-6 -right-4 h-[62%] w-auto"}`}
+        style={{ aspectRatio: "1 / 1" }}
+      />
     </div>
   );
 }

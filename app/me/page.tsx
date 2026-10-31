@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Gift, LogOut, PenSquare, Shield } from "lucide-react";
 import { useAuth, useRequireAuth } from "@/lib/auth";
+import { SITE } from "@/lib/config";
 import { useI18n } from "@/lib/i18n";
 import { api } from "@/lib/api";
 import { CountrySelect } from "@/components/CountrySelect";
@@ -72,9 +73,9 @@ export default function SettingsPage() {
           <Link href={`/u/${profile.username}`} className="btn-ghost py-2 text-sm">
             {t("nav_profile")}
           </Link>
-          <Link href="/me/prizes" className="btn-ghost py-2 text-sm">
+          {SITE.competitions && <Link href="/me/prizes" className="btn-ghost py-2 text-sm">
             <Gift className="h-4 w-4" /> {t("nav_prizes")}
-          </Link>
+          </Link>}
         </div>
       </div>
 
@@ -100,6 +101,7 @@ export default function SettingsPage() {
             <input maxLength={64} value={team} onChange={(e) => setTeam(e.target.value)} placeholder={t("team_placeholder")} className="input" />
           </Field>
         </div>
+        {SITE.competitions && (
         <Field label={t("zcash_address")} hint={t("zcash_address_hint")}>
           <div className="relative">
             <Shield className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-accent" />
@@ -113,6 +115,7 @@ export default function SettingsPage() {
             />
           </div>
         </Field>
+        )}
         <button disabled={busy} className="btn-zec">
           {busy && <Spinner className="h-4 w-4 text-[#1A1506]" />}
           {t("save")}
@@ -120,7 +123,7 @@ export default function SettingsPage() {
       </form>
 
       {profile.role === "player" && (
-        <div className="card space-y-3 p-6">
+        <div id="organizer" className="card scroll-mt-24 space-y-3 p-6">
           <h2 className="flex items-center gap-2 font-semibold">
             <PenSquare className="h-5 w-5 text-accent" /> {t("become_creator")}
           </h2>

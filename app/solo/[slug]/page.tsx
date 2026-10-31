@@ -186,8 +186,8 @@ function Solo() {
               <RotateCcw className="h-4 w-4" />
               {t("play_again")}
             </button>
-            <Link href="/events" className="btn-ghost">
-              {t("nav_events")}
+            <Link href="/explore" className="btn-ghost">
+              {t("nav_explore")}
             </Link>
           </div>
         </div>

@@ -10,6 +10,7 @@ import { api } from "@/lib/api";
 import { useAsync } from "@/lib/useAsync";
 import { parseQuizJson } from "@/lib/quizImport";
 import { QuizCover } from "@/components/QuizCover";
+import { StudioFirstSteps } from "@/components/StudioFirstSteps";
 import { Alert, ErrorBox, PageLoader, Spinner, StatusChip, hashIndex } from "@/components/ui";
 import type { QuizCardData } from "@/lib/types";
 
@@ -41,9 +42,9 @@ export default function StudioPage() {
 
       {importOpen && <ImportPanel onDone={() => { reload(); }} />}
 
-      {!data?.length ? (
-        <div className="card p-10 text-center text-muted">{t("no_quizzes_yet")}</div>
-      ) : (
+      {(data?.length ?? 0) < 2 && <StudioFirstSteps onError={(e) => alert(te(e))} />}
+
+      {!data?.length ? null : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {data.map((q) => (
             <StudioCard key={q.id} q={q} onChange={reload} onError={(e) => alert(te(e))} />

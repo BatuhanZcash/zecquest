@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
-import { JoinBox } from "@/components/JoinBox";
 import { HomeHero } from "@/components/HomeHero";
+import { OrganizerCard } from "@/components/OrganizerSteps";
+import { SITE } from "@/lib/config";
 import { LeaderboardPanel } from "@/components/LeaderboardPanel";
 import { EventRow } from "@/components/EventCard";
 import { QuizCard, QuizCardSkeleton } from "@/components/ui";
@@ -15,13 +16,13 @@ import { useServerNow } from "@/lib/useGame";
 export default function HomePage() {
   const { t } = useI18n();
   const quizzes = useAsync(() => api.listQuizzes({ sort: "featured", limit: 12 }), []);
-  const events = useAsync(() => api.listEvents(), []);
+  const events = useAsync(() => (SITE.competitions ? api.listEvents() : Promise.resolve(null)), []);
   const now = useServerNow(true, 1000);
   const fixtures = [...(events.data?.live ?? []), ...(events.data?.upcoming ?? [])].slice(0, 5);
 
   return (
     <div className="space-y-8">
-      <HomeHero next={fixtures[0] ?? null} now={now} />
+      <HomeHero next={SITE.competitions ? fixtures[0] ?? null : null} now={now} />
 
       {/* Öne çıkan quizler */}
       <section>
@@ -42,7 +43,10 @@ export default function HomePage() {
       </section>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-        {/* Yarışma fikstürü */}
+        {/* Yarışmalar kapalıyken: topluluk organizatörleri için kart */}
+        {!SITE.competitions ? (
+          <OrganizerCard />
+        ) : (
         <section className="card overflow-hidden">
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <h2 className="section-title">{t("competitions")}</h2>
@@ -79,9 +83,9 @@ export default function HomePage() {
             </div>
           )}
         </section>
+        )}
 
         <div className="space-y-6">
-          <JoinBox />
           <LeaderboardPanel limit={5} />
         </div>
       </div>

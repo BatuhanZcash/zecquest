@@ -46,8 +46,8 @@ export default function AboutPage() {
       <h1 className="page-title">{t("nav_about")}</h1>
       <p className="mt-2 max-w-2xl text-muted">
         {lang === "tr"
-          ? "Zcash, 2016'dan beri çalışan, gizliliği kriptografiyle sağlayan bir dijital para. Turnuva öncesi hızlı bir tekrar:"
-          : "Zcash is a digital currency, live since 2016, that delivers privacy through cryptography. A quick refresher before the tournament:"}
+          ? "Zcash, 2016'dan beri çalışan, gizliliği kriptografiyle sağlayan bir dijital para. Bir sonraki quizden önce hızlı bir tekrar:"
+          : "Zcash is a digital currency, live since 2016, that delivers privacy through cryptography. A quick refresher before your next quiz:"}
       </p>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         {CARDS.map(({ icon: Icon, title, body }) => (
