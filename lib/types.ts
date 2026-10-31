@@ -14,6 +14,8 @@ export interface Profile {
   creator_request_at: string | null;
   zcash_address: string | null;
   created_at: string;
+  /** Hesap açmadan (anonim) giriş yapmış misafir: sadece anlık odalara katılır */
+  is_guest?: boolean;
 }
 
 export interface AuthorRef {

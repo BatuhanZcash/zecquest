@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CheckCircle2, Clock, Crown, Gift, Home, Loader2, LogIn, LogOut, Timer, Trophy, Users, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, Crown, Gift, Home, Loader2, LogIn, LogOut, Timer, Trophy, UserPlus, Users, XCircle, Zap } from "lucide-react";
 import { ANSWER_SECS } from "@/lib/config";
 import { AnswerButton, Avatar, Spinner } from "@/components/ui";
 import { BigCountdown, Countdown, OfflineBanner, StreakBadge } from "@/components/game";
@@ -12,17 +12,20 @@ import { formatCode, addRecentRoom } from "@/components/JoinBox";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { api, ApiError } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { useGame, useServerNow } from "@/lib/useGame";
 import { useWakeLock } from "@/lib/wakeLock";
 import type { GameState, MyStatus } from "@/lib/types";
 
 type Phase = "loading" | "notfound" | "signin" | "joining" | "in" | "kicked" | "error";
 
+const GUEST_NAME_KEY = "zq-guest-name";
+
 export default function PlayPage() {
   const { code } = useParams<{ code: string }>();
   const router = useRouter();
   const { t, te } = useI18n();
-  const { ready, session, profile } = useAuth();
+  const { ready, session, profile, refreshProfile } = useAuth();
 
   const [preview, setPreview] = useState<GameState | null>(null);
   const [phase, setPhase] = useState<Phase>("loading");
@@ -59,7 +62,14 @@ export default function PlayPage() {
       setPhase("signin");
       return;
     }
-    if (!profile?.username) return; // ClientInit onboarding'e yönlendirir
+    if (!profile) return;
+    if (profile.is_guest) {
+      // Misafir: sadece anlık odalar; adı yoksa önce ad sorulur
+      if (preview.mode !== "hosted" || !profile.display_name) {
+        setPhase("signin");
+        return;
+      }
+    } else if (!profile.username) return; // ClientInit onboarding'e yönlendirir
     setPhase("joining");
     api
       .joinGame(code)
@@ -79,7 +89,7 @@ export default function PlayPage() {
           setPhase("error");
         }
       });
-  }, [preview, ready, session, profile?.username, code, router, t, te]);
+  }, [preview, ready, session, profile, code, router, t, te]);
 
   if (phase === "in" && gameId) return <Game gameId={gameId} code={code} />;
 
@@ -109,10 +119,23 @@ export default function PlayPage() {
       ) : phase === "signin" && preview ? (
         <Center>
           <PreviewCard g={preview} />
-          <Link href={`/login?next=${encodeURIComponent(`/play/${code}`)}`} className="btn-zec mt-6 w-full max-w-sm text-lg">
-            <LogIn className="h-5 w-5" />
-            {t("sign_in_to_join")}
-          </Link>
+          {preview.mode === "hosted" ? (
+            <GuestJoin
+              code={code}
+              initial={profile?.is_guest ? profile.display_name ?? "" : ""}
+              onDone={async () => {
+                await refreshProfile();
+              }}
+            />
+          ) : (
+            <>
+              {profile?.is_guest && <p className="mt-5 max-w-sm text-sm text-muted">{t("guest_event_needs_account")}</p>}
+              <Link href={`/login?next=${encodeURIComponent(`/play/${code}`)}`} className="btn-zec mt-6 w-full max-w-sm text-lg">
+                <LogIn className="h-5 w-5" />
+                {t("sign_in_to_join")}
+              </Link>
+            </>
+          )}
         </Center>
       ) : (
         <Center>
@@ -124,6 +147,78 @@ export default function PlayPage() {
         </Center>
       )}
     </Screen>
+  );
+}
+
+/** Hesap açmadan, takma adla anlık odaya katılma */
+function GuestJoin({ code, initial, onDone }: { code: string; initial: string; onDone: () => Promise<void> }) {
+  const { t, te } = useI18n();
+  const { session, profile } = useAuth();
+  const [name, setName] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initial) return;
+    try {
+      const saved = localStorage.getItem(GUEST_NAME_KEY);
+      if (saved) setName(saved);
+    } catch {}
+  }, [initial]);
+
+  const clean = name.trim().replace(/\s+/g, " ");
+  const valid = clean.length >= 2 && clean.length <= 24;
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!valid) return;
+    setBusy(true);
+    setError(null);
+    try {
+      if (!session || !profile?.is_guest) {
+        const { error } = await supabase.auth.signInAnonymously();
+        if (error) throw error;
+      }
+      await api.guestStart(clean);
+      try {
+        localStorage.setItem(GUEST_NAME_KEY, clean);
+      } catch {}
+      await onDone();
+    } catch (err) {
+      setError(te(err));
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-5 w-full max-w-sm">
+      <form onSubmit={submit} className="card space-y-3 p-5 text-left">
+        <label className="block">
+          <span className="label mb-1.5 block">{t("guest_name_label")}</span>
+          <input
+            autoFocus
+            value={name}
+            maxLength={24}
+            autoComplete="nickname"
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t("guest_name_placeholder")}
+            className="input text-lg"
+          />
+        </label>
+        {error && <p className="text-sm font-medium text-[#D93036]">{error}</p>}
+        <button disabled={busy || !valid} className="btn-zec w-full text-lg">
+          {busy ? <Spinner className="h-5 w-5 text-[#1A1506]" /> : <Zap className="h-5 w-5" />}
+          {t("guest_join_cta")}
+        </button>
+        <p className="text-center text-[12.5px] text-soft">{t("guest_note")}</p>
+      </form>
+      {!session && (
+        <Link href={`/login?next=${encodeURIComponent(`/play/${code}`)}`} className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:underline">
+          <LogIn className="h-4 w-4" />
+          {t("guest_or_sign_in")}
+        </Link>
+      )}
+    </div>
   );
 }
 
@@ -362,6 +457,7 @@ function MiniBoard({ rows, meName }: { rows: GameState["leaderboard"]; meName?: 
 
 function EndScreen({ state, me }: { state: GameState; me: MyStatus | null }) {
   const { t, fmt } = useI18n();
+  const guest = !!useAuth().profile?.is_guest;
   const rank = me?.rank ?? 0;
   return (
     <div className="flex flex-1 flex-col items-center justify-center text-center">
@@ -378,6 +474,18 @@ function EndScreen({ state, me }: { state: GameState; me: MyStatus | null }) {
           </p>
           <Link href="/me/prizes" className="mt-3 block rounded-xl bg-[#1A1506] py-2 font-bold text-accent">
             {t("claim_prize")}
+          </Link>
+        </div>
+      )}
+
+      {guest && (
+        <div className="mt-6 w-full max-w-sm rounded-xl2 border border-zec/40 bg-tint p-4 text-left">
+          <p className="flex items-center gap-2 font-bold">
+            <UserPlus className="h-5 w-5 text-accent" /> {t("guest_save_title")}
+          </p>
+          <p className="mt-1 text-sm text-muted">{t("guest_save_body")}</p>
+          <Link href={`/login?next=${encodeURIComponent(`/results/${state.id}`)}`} className="btn-zec mt-3 w-full">
+            {t("guest_save_cta")}
           </Link>
         </div>
       )}

@@ -244,15 +244,18 @@ function UserMenu() {
   }
 
   const name = profile?.display_name || profile?.username || "…";
+  const guest = !!profile?.is_guest;
   return (
     <div ref={ref} className="relative ml-1">
       <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-2 rounded-full p-0.5 pr-1 hover:bg-input sm:pr-3" aria-label={t("nav_profile")}>
         <Avatar name={name} size={34} />
         <span className="hidden max-w-[120px] truncate text-sm font-semibold sm:inline">{name}</span>
+        {guest && <span className="hidden rounded-full bg-input px-2 py-0.5 text-[11px] font-semibold text-muted sm:inline">{t("guest_badge")}</span>}
       </button>
       {open && (
         <div className="absolute right-0 top-[calc(100%+8px)] w-56 animate-pop overflow-hidden rounded-xl2 border border-line bg-elevated p-1.5 shadow-card">
-          {profile?.username && (
+          {guest && <MenuLink href="/login" icon={User} label={t("guest_create_account")} />}
+          {!guest && profile?.username && (
             <>
               <MenuLink href={`/u/${profile.username}`} icon={User} label={t("nav_profile")} />
               <MenuLink href="/me/prizes" icon={Gift} label={t("nav_prizes")} />

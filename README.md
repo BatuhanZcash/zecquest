@@ -61,6 +61,7 @@ Dosya konana kadar arayüzde yerine sade bir "ZEC" rozeti görünür. Zcash tica
    3. `supabase/migrations/0003_game_engine.sql`
    4. `supabase/migrations/0004_solo_leaderboard_admin.sql`
    5. `supabase/migrations/0005_quiz_covers.sql` (kapak fotoğrafları için Storage kovası `quiz-covers` ve izinleri)
+   6. `supabase/migrations/0006_guests.sql` (misafir girişi)
 3. **Database → Extensions** → `pg_cron`'u aç, sonra `supabase/optional/cron.sql` dosyasını çalıştır. *(Önerilir: kimse bağlı değilken bile planlı yarışmalar zamanında ilerler.)*
 4. **Realtime → Settings**: "Allow public access" / public channels açık olmalı (varsayılan). Oyun durumu herkese açıktır; doğru cevap içermez.
 
@@ -111,6 +112,13 @@ npm run dev                  # http://localhost:3000
 - **Stüdyo → JSON içe aktar:** elinizdeki soruları toplu yüklemek için. Biçim: `samples/` klasörü (`_SABLON.json` şablon, diğerleri örnek). Tek quiz ya da quiz dizisi yapıştırılabilir; içe aktarılanlar taslak olarak gelir.
 - Üreticiler **İncelemeye gönder**ir; yöneticiler **Yönetim → İnceleme**'den onaylar/reddeder (ret sebebi yazara gösterilir). Yöneticinin kendi quizleri doğrudan yayınlanır.
 - Yayındaki bir quiz düzenlenirse tekrar incelemeye düşer. Başlamış oyunlar etkilenmez (oyun başlarken soruların kopyası alınır).
+
+### Misafir girişi (anlık odalar)
+- **Authentication → Sign In / Providers → "Allow anonymous sign-ins"** açık olmalı. **Rate Limits → anonymous users** değerini yükselt (aynı Wi-Fi'deki bir salon tek IP sayılır).
+- Oda kodunu ya da QR'ı açan kişi hesap açmadan, sadece takma adla anlık odaya katılır.
+- Misafirler planlı (ödüllü) yarışmalara, solo moda ve stüdyoya giremez; puanları genel liderlikte görünmez, ödül hakkı doğmaz.
+- Oyun sonunda **Hesap aç** ile e-postasını doğrulayan misafir aynı kullanıcı olarak kalır, kullanıcı adını seçer ve misafirken kazandığı puanlar genel tabloya eklenir.
+- **Emails → Change email address** şablonunda `{{ .Token }}` olmalı (hesaba dönüşte kod ile doğrulama).
 
 ### Planlı global yarışma
 **Yönetim → Yarışmalar → Yarışma planla:** quiz, ad (TR/EN), başlangıç (kendi yerel saatinle girilir, herkese kendi saat diliminde gösterilir), cevap/skor ekranı süreleri, ödül metni ve ödüllü sıra sayısı.

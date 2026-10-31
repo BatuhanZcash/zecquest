@@ -19,6 +19,8 @@ export function ClientInit() {
 
   useEffect(() => {
     if (!ready || !session || !profile) return;
+    // Misafirler kullanıcı adı seçmez; sadece anlık odalarda oynar
+    if (profile.is_guest) return;
     if (!profile.username && !OPEN_WITHOUT_PROFILE.some((r) => r.test(pathname))) {
       router.replace(`/onboarding?next=${encodeURIComponent(pathname)}`);
     }

@@ -35,11 +35,15 @@ function Login() {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(params.get("error") ? t("err_generic") : null);
+  const [note, setNote] = useState<string | null>(null);
+  // Misafir oturumu varsa: aynı kullanıcıyı e-postayla kalıcı hesaba çevir (puanlar korunur)
+  const [upgrade, setUpgrade] = useState(false);
+  useEffect(() => setUpgrade(!!profile?.is_guest), [profile?.is_guest]);
 
   // Zaten girişliyse yönlendir
   useEffect(() => {
     if (!ready || !session) return;
-    if (profile === null) return;
+    if (profile === null || profile.is_guest) return;
     router.replace(profile.username ? next : `/onboarding?next=${encodeURIComponent(next)}`);
   }, [ready, session, profile, next, router]);
 
@@ -59,6 +63,22 @@ function Login() {
     e?.preventDefault();
     setError(null);
     setBusy(true);
+    if (upgrade) {
+      const { error } = await supabase.auth.updateUser({ email: email.trim() }, { emailRedirectTo: callback() });
+      if (!error) {
+        setBusy(false);
+        setStep("code");
+        return;
+      }
+      if (!/already|exists|registered/i.test(error.message + " " + (error as { code?: string }).code)) {
+        setBusy(false);
+        setError(te(error));
+        return;
+      }
+      // Bu e-postayla zaten hesap var: o hesaba normal giriş yapılır (misafir puanı aktarılmaz)
+      setUpgrade(false);
+      setNote(t("guest_email_exists"));
+    }
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: { shouldCreateUser: true, emailRedirectTo: callback() },
@@ -72,7 +92,7 @@ function Login() {
     e.preventDefault();
     setError(null);
     setBusy(true);
-    const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: "email" });
+    const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: code.trim(), type: upgrade ? "email_change" : "email" });
     if (error) {
       setBusy(false);
       setError(t("err_otp"));
@@ -87,12 +107,13 @@ function Login() {
       <div className="card relative overflow-hidden p-6 sm:p-8">
         <div className="relative text-center">
           <LogoMark size={44} className="mx-auto" />
-          <h1 className="mt-4 text-[20px] font-bold tracking-[-0.01em]">{t("login_title")}</h1>
-          <p className="mt-1 text-sm text-muted">{t("login_sub")}</p>
+          <h1 className="mt-4 text-[20px] font-bold tracking-[-0.01em]">{upgrade ? t("guest_upgrade_title") : t("login_title")}</h1>
+          <p className="mt-1 text-sm text-muted">{upgrade ? t("guest_upgrade_sub") : t("login_sub")}</p>
         </div>
 
         <div className="relative mt-6 space-y-4">
           {error && <Alert>{error}</Alert>}
+          {note && <Alert kind="info">{note}</Alert>}
 
           {step === "email" ? (
             <>
@@ -124,7 +145,7 @@ function Login() {
                 </label>
                 <button disabled={busy || !email.includes("@")} className="btn-zec w-full">
                   {busy ? <Spinner className="h-5 w-5 text-[#1A1506]" /> : <Mail className="h-5 w-5" />}
-                  {t("send_code")}
+                  {upgrade ? t("send_verify_code") : t("send_code")}
                 </button>
               </form>
             </>

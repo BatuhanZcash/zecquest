@@ -34,6 +34,7 @@ async function call<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
 /* ---------- Profil ---------- */
 export const api = {
   myProfile: () => call<Profile | null>("get_my_profile"),
+  guestStart: (name: string) => call<Profile>("guest_start", { p_name: name }),
   updateProfile: (p: Partial<Pick<Profile, "username" | "display_name" | "country" | "team" | "zcash_address">>) =>
     call<Profile>("update_my_profile", { p }),
   usernameAvailable: (u: string) => call<boolean>("is_username_available", { p_username: u }),

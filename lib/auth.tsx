@@ -93,13 +93,14 @@ export function useRequireAuth(role: Role = "player") {
   const router = useRouter();
   const pathname = usePathname();
 
-  const ok = ready && !!session && !!profile?.username && hasRole(profile, role) && !profile.banned;
+  const guest = !!profile?.is_guest;
+  const ok = ready && !!session && !guest && !!profile?.username && hasRole(profile, role) && !profile.banned;
   const forbidden = ready && !!session && !!profile?.username && !hasRole(profile, role);
 
   useEffect(() => {
     if (!ready) return;
     const next = encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : pathname);
-    if (!session) router.replace(`/login?next=${next}`);
+    if (!session || (profile && profile.is_guest)) router.replace(`/login?next=${next}`);
     else if (profile && !profile.username) router.replace(`/onboarding?next=${next}`);
   }, [ready, session, profile, router, pathname]);
 
