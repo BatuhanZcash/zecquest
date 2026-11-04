@@ -382,6 +382,33 @@ rpc(gu, "update_my_profile", p={"username": "ali_eski_misafir", "country": "TR"}
 lb = rpc(None, "get_leaderboard", p_group="player", p_range="all", p_quiz=None, p_limit=200)
 check("eski misafir puanı genel liderliğe aktarılır", any(r["username"] == "ali_eski_misafir" for r in lb["rows"]))
 
+print("\n— Tek dilli quizler —")
+SQ = [{"text": "¿En qué año se lanzó Zcash?", "options": ["2014", "2016"], "correct": 1, "explanation": "Octubre de 2016."}]
+es = rpc(creator, "save_quiz", p={"slug": "zcash-espanol", "title": "Zcash en español", "language": "es", "questions": SQ})
+row = sql("select language, title #>> '{}' from quizzes where id=%s", es["id"])[0]
+check("organizatör tek dilli (İspanyolca) quiz kaydeder", row == ("es", "Zcash en español"), row)
+hi = rpc(creator, "save_quiz", p={"slug": "zcash-hindi", "title": "ज़ीकैश प्रश्नोत्तरी", "language": "hi",
+     "questions": [{"text": "ज़ीकैश कब शुरू हुआ?", "options": ["2014", "2016"], "correct": 1}]})
+check("Hintçe (Latin dışı) metin kaydedilir", sql("select title #>> '{}' from quizzes where id=%s", hi["id"])[0][0] == "ज़ीकैश प्रश्नोत्तरी")
+check("geçersiz dil kodu reddedilir", err(creator, "save_quiz", p={"slug": "bad-lang", "title": "x", "language": "Spanish!", "questions": SQ}) == "invalid_language")
+check("bölgesel dil kodu kabul edilir (pt-BR)", rpc(creator, "save_quiz", p={"slug": "zcash-pt", "title": "Zcash", "language": "pt-BR", "questions": SQ})["slug"] == "zcash-pt")
+ed = rpc(creator, "get_quiz_for_edit", p_id=es["id"])
+check("düzenleme ekranına dil gelir", ed["language"] == "es" and ed["questions"][0]["text"] == SQ[0]["text"], ed.get("language"))
+rpc(admin, "review_quiz", p_id=es["id"], p_approve=True, p_note=None)
+rpc(admin, "review_quiz", p_id=hi["id"], p_approve=True, p_note=None)
+es_list = rpc(None, "list_quizzes", p_language="es")
+check("Keşfet dil filtresi: sadece İspanyolca", [q["slug"] for q in es_list] == ["zcash-espanol"], [q["slug"] for q in es_list])
+check("quiz kartında dil var", es_list[0]["language"] == "es")
+en_list = [q["slug"] for q in rpc(None, "list_quizzes", p_language="en")]
+check("iki dilli quiz İngilizce filtresinde görünür, İspanyolca görünmez", "zcash-test" in en_list and "zcash-espanol" not in en_list, en_list)
+check("filtresiz listede hepsi var", {"zcash-espanol", "zcash-hindi"} <= {q["slug"] for q in rpc(None, "list_quizzes")})
+langs = {x["code"]: x["count"] for x in rpc(None, "list_quiz_languages")}
+check("dil listesi sayıları", langs.get("es") == 1 and langs.get("hi") == 1 and langs.get("en", 0) >= 1, langs)
+check("A–Z sıralama tek dilli başlıklarla çalışır", len(rpc(None, "list_quizzes", p_sort="az")) >= 3)
+hg = rpc(creator, "create_hosted_game", p_quiz_id=es["id"])
+check("tek dilli quizle canlı oda açılır", bool(hg.get("code")), hg)
+rpc(creator, "end_game_now", p_game_id=hg["id"])
+
 print(f"\n{len(PASS)} geçti, {len(FAIL)} başarısız")
 if FAIL:
     print("BAŞARISIZ:", FAIL)

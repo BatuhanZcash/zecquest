@@ -369,7 +369,7 @@ function Game({ gameId, code }: { gameId: string; code: string }) {
               <Countdown remainingMs={(state.phase_ends_at ?? 0) - now} totalSec={state.question.time_limit} size={54} />
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold text-soft">{t("question_of", { n: state.current_q + 1, t: state.question_count })}</p>
-                <p className="text-[17px] font-semibold leading-snug">{lt(state.question.text)}</p>
+                <p dir="auto" className="text-[17px] font-semibold leading-snug">{lt(state.question.text)}</p>
               </div>
               <StreakBadge n={me?.streak ?? 0} />
             </div>
@@ -432,9 +432,9 @@ function RevealScreen({ state, choice, me }: { state: GameState; choice: number 
       </div>
       {me?.rank && res && <p className="mt-3 text-lg font-semibold opacity-90">{t("rank_n", { n: me.rank })}</p>}
       {!correct && state.question && (
-        <p className="mt-4 max-w-sm text-sm opacity-90">✓ {lt(state.question.options[rv.correct])}</p>
+        <p dir="auto" className="mt-4 max-w-sm text-sm opacity-90">✓ {lt(state.question.options[rv.correct])}</p>
       )}
-      {rv.explanation && <p className="mt-4 max-w-sm text-sm opacity-90">{lt(rv.explanation)}</p>}
+      {rv.explanation && <p dir="auto" className="mt-4 max-w-sm text-sm opacity-90">{lt(rv.explanation)}</p>}
     </div>
   );
 }

@@ -62,6 +62,7 @@ Dosya konana kadar arayüzde yerine sade bir "ZEC" rozeti görünür. Zcash tica
    4. `supabase/migrations/0004_solo_leaderboard_admin.sql`
    5. `supabase/migrations/0005_quiz_covers.sql` (kapak fotoğrafları için Storage kovası `quiz-covers` ve izinleri)
    6. `supabase/migrations/0006_guests.sql` (misafir girişi)
+   7. `supabase/migrations/0007_quiz_language.sql` (tek dilli quizler: organizatör quizini istediği tek dilde hazırlar)
 3. **Database → Extensions** → `pg_cron`'u aç, sonra `supabase/optional/cron.sql` dosyasını çalıştır. *(Önerilir: kimse bağlı değilken bile planlı yarışmalar zamanında ilerler.)*
 4. **Realtime → Settings**: "Allow public access" / public channels açık olmalı (varsayılan). Oyun durumu herkese açıktır; doğru cevap içermez.
 
@@ -164,7 +165,7 @@ Doğru cevap = 500 + hıza göre 0–500 + art arda doğru serisi başına +100 
 - Çok büyük etkinliklerden önce `supabase/tests` ile yük testi yapmanı öneririz.
 
 ## Testler
-`supabase/tests/test_engine.py` — oyun motorunun 117 testi (roller, 10 saniye kuralı, quiz yaşam döngüsü, tablo erişim güvenliği, sunucu yönetimli ve planlı oyunlar, yenileme sonrası devam, süre aşımı, geç cevap, oyuncu çıkarma, ödüller, solo, liderlik, 60 eşzamanlı oyuncu). Supabase'i taklit eden yerel bir Postgres'te çalışır:
+`supabase/tests/test_engine.py` — oyun motorunun 150 testi (roller, 10 saniye kuralı, quiz yaşam döngüsü, tablo erişim güvenliği, sunucu yönetimli ve planlı oyunlar, yenileme sonrası devam, süre aşımı, geç cevap, oyuncu çıkarma, ödüller, solo, liderlik, 60 eşzamanlı oyuncu). Supabase'i taklit eden yerel bir Postgres'te çalışır:
 ```bash
 createdb -E UTF8 zq_test
 psql -d zq_test -f supabase/tests/stub.sql

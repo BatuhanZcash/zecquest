@@ -7,6 +7,7 @@ import { QuizCard, QuizCardSkeleton } from "@/components/ui";
 import { useI18n } from "@/lib/i18n";
 import { api } from "@/lib/api";
 import { useAsync } from "@/lib/useAsync";
+import { findLanguage } from "@/lib/languages";
 
 export default function ExplorePage() {
   return (
@@ -23,6 +24,7 @@ function Explore() {
   const [debounced, setDebounced] = useState(q);
   const [sort, setSort] = useState("featured");
   const [tag, setTag] = useState<string | null>(null);
+  const [language, setLanguage] = useState(params.get("lang") ?? "");
 
   useEffect(() => {
     const id = setTimeout(() => setDebounced(q.trim()), 300);
@@ -30,7 +32,8 @@ function Explore() {
   }, [q]);
 
   const tags = useAsync(() => api.listTags(), []);
-  const list = useAsync(() => api.listQuizzes({ search: debounced, tag: tag ?? undefined, sort, limit: 60 }), [debounced, tag, sort]);
+  const langs = useAsync(() => api.listQuizLanguages(), []);
+  const list = useAsync(() => api.listQuizzes({ search: debounced, tag: tag ?? undefined, sort, language, limit: 60 }), [debounced, tag, sort, language]);
 
   return (
     <div className="mx-auto max-w-[1000px]">
@@ -44,6 +47,16 @@ function Explore() {
           <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-soft" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("explore_search")} className="input pl-11" />
         </label>
+        {(langs.data?.length ?? 0) > 1 && (
+          <select value={language} onChange={(e) => setLanguage(e.target.value)} aria-label={t("quiz_language")} className="input w-[132px] shrink-0 cursor-pointer px-3 text-sm font-semibold sm:w-[170px]">
+            <option value="">{t("lang_all")}</option>
+            {langs.data!.map((l) => (
+              <option key={l.code} value={l.code}>
+                {findLanguage(l.code)?.native} ({l.count})
+              </option>
+            ))}
+          </select>
+        )}
         <select value={sort} onChange={(e) => setSort(e.target.value)} className="input w-[132px] shrink-0 cursor-pointer px-3 text-sm font-semibold sm:w-[170px]">
           <option value="featured">{t("sort_featured")}</option>
           <option value="new">{t("sort_new")}</option>

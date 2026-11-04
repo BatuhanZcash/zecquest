@@ -1,5 +1,6 @@
 "use client";
 
+import { languageLabel, textAttrs } from "@/lib/languages";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -79,11 +80,11 @@ function StudioCard({ q, onChange, onError }: { q: QuizCardData; onChange: () =>
       <QuizCover icon={q.icon} cover={q.cover_url} index={hashIndex(q.id)} className="h-24" />
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-start gap-2">
-          <h3 className="flex-1 font-semibold leading-snug">{lt(q.title)}</h3>
+          <h3 {...textAttrs(q.language)} className="flex-1 font-semibold leading-snug">{lt(q.title)}</h3>
           <StatusChip status={q.status} />
         </div>
         <p className="mt-1 text-xs text-soft">
-          {q.question_count} {t("questions")} · {q.plays} {t("plays").toLowerCase()}
+          {languageLabel(q.language)} · {q.question_count} {t("questions")} · {q.plays} {t("plays").toLowerCase()}
         </p>
         {q.status === "rejected" && q.review_note && (
           <div className="mt-3">

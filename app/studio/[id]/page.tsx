@@ -10,22 +10,41 @@ import { useI18n } from "@/lib/i18n";
 import { api } from "@/lib/api";
 import { slugify } from "@/lib/quizImport";
 import { CoverUpload } from "@/components/CoverUpload";
+import { QUIZ_LANGUAGES, findLanguage, textAttrs } from "@/lib/languages";
 import { Alert, BackButton, ErrorBox, Field, PageLoader, Shape, Spinner, StatusChip, ANSWER_STYLES } from "@/components/ui";
 import type { EditableQuiz, LocalText, QuizStatus } from "@/lib/types";
 
 type Bi = { tr: string; en: string };
 type Q = { text: Bi; options: Bi[]; correct: number; time_limit: string; explanation: Bi; open: boolean };
-type Form = { id?: string; slug: string; title: Bi; description: Bi; icon: string; cover_url: string | null; tags: string; default_time: number; status?: QuizStatus; review_note?: string | null; questions: Q[] };
+type Form = { id?: string; slug: string; language: string | null; title: Bi; description: Bi; icon: string; cover_url: string | null; tags: string; default_time: number; status?: QuizStatus; review_note?: string | null; questions: Q[] };
 
 const ICONS = ["shield", "coin", "key", "eye", "layers", "spark", "lock", "cpu"];
 const bi = (t: LocalText | null | undefined): Bi => (!t ? { tr: "", en: "" } : typeof t === "string" ? { tr: t, en: "" } : { tr: t.tr ?? "", en: t.en ?? "" });
 const out = (b: Bi): LocalText | null => (b.tr.trim() || b.en.trim() ? { tr: b.tr.trim(), en: b.en.trim() } : null);
+/** Tek dilli quizde metin Bi.tr alanında tutulur ve düz string olarak kaydedilir */
+const outSingle = (b: Bi): string | null => b.tr.trim() || null;
+
+/** Dil modu değişince tüm metin alanlarını taşır (iki dilli ↔ tek dilli) */
+function convertTexts(f: Form, next: string | null) {
+  const all: Bi[] = [f.title, f.description, ...f.questions.flatMap((q) => [q.text, q.explanation, ...q.options])];
+  for (const b of all) {
+    if (f.language === null && next !== null) {
+      b.tr = next === "en" ? b.en || b.tr : b.tr || b.en;
+      b.en = "";
+    } else if (f.language !== null && next === null && f.language === "en") {
+      b.en = b.tr;
+      b.tr = "";
+    }
+  }
+  f.language = next;
+}
 const emptyQ = (): Q => ({ text: { tr: "", en: "" }, options: [{ tr: "", en: "" }, { tr: "", en: "" }, { tr: "", en: "" }, { tr: "", en: "" }], correct: 0, time_limit: "", explanation: { tr: "", en: "" }, open: true });
 
 function toForm(q: EditableQuiz): Form {
   return {
     id: q.id,
     slug: q.slug,
+    language: q.language ?? null,
     title: bi(q.title),
     description: bi(q.description),
     icon: q.icon || "shield",
@@ -46,21 +65,24 @@ function toForm(q: EditableQuiz): Form {
 }
 
 function fromForm(f: Form): EditableQuiz {
+  const o = f.language ? outSingle : out;
   return {
     id: f.id,
-    slug: f.slug,
-    title: out(f.title) ?? "",
-    description: out(f.description),
+    // Latin dışı başlıklarda (हिन्दी, العربية…) otomatik adres boş kalırsa rastgele bir adres verilir
+    slug: f.slug || `quiz-${Math.random().toString(36).slice(2, 8)}`,
+    language: f.language,
+    title: o(f.title) ?? "",
+    description: o(f.description),
     icon: f.icon,
     cover_url: f.cover_url,
     tags: f.tags.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 6),
     default_time: f.default_time,
     questions: f.questions.map((q) => ({
-      text: out(q.text) ?? "",
-      options: q.options.map((o) => out(o) ?? ""),
+      text: o(q.text) ?? "",
+      options: q.options.map((x) => o(x) ?? ""),
       correct: q.correct,
       time_limit: q.time_limit ? Number(q.time_limit) : null,
-      explanation: out(q.explanation),
+      explanation: o(q.explanation),
     })),
   };
 }
@@ -68,12 +90,12 @@ function fromForm(f: Form): EditableQuiz {
 export default function EditorPage() {
   const { id } = useParams<{ id: string }>();
   const isNew = id === "new";
-  const { t, te } = useI18n();
+  const { t, te, lang } = useI18n();
   const router = useRouter();
   const auth = useRequireAuth("creator");
   const { profile } = useAuth();
 
-  const [form, setForm] = useState<Form | null>(isNew ? { slug: "", title: { tr: "", en: "" }, description: { tr: "", en: "" }, icon: "shield", cover_url: null, tags: "", default_time: 20, questions: [emptyQ()] } : null);
+  const [form, setForm] = useState<Form | null>(isNew ? { slug: "", language: lang, title: { tr: "", en: "" }, description: { tr: "", en: "" }, icon: "shield", cover_url: null, tags: "", default_time: 20, questions: [emptyQ()] } : null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -84,6 +106,11 @@ export default function EditorPage() {
     if (!auth.ok || isNew) return;
     api.quizForEdit(id).then((q) => setForm(toForm(q))).catch((e) => setLoadErr(te(e)));
   }, [auth.ok, id, isNew, te]);
+
+  // Yeni quizde varsayılan dil, arayüz dili (kullanıcı değiştirmediyse)
+  useEffect(() => {
+    if (isNew && !dirty) setForm((f) => (f ? { ...f, language: lang } : f));
+  }, [isNew, lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!dirty) return;
@@ -148,6 +175,18 @@ export default function EditorPage() {
   };
 
   const isAdmin = profile?.role === "admin";
+  const single = form.language !== null;
+  const ta = textAttrs(form.language);
+  const langName = findLanguage(form.language)?.native ?? "";
+
+  const changeLanguage = (v: string) => {
+    const next = v === "" ? null : v;
+    if (form.language === null && next !== null) {
+      const hasBoth = [form.title, ...form.questions.map((q) => q.text)].some((b) => b.tr.trim() && b.en.trim());
+      if (hasBoth && !confirm(t("lang_switch_confirm"))) return;
+    }
+    update((f) => convertTexts(f, next));
+  };
 
   return (
     <div className="mx-auto max-w-4xl space-y-5 pb-24">
@@ -182,7 +221,43 @@ export default function EditorPage() {
             <CoverUpload value={form.cover_url} onChange={(url) => update((f) => (f.cover_url = url))} />
           </div>
         </div>
+        <div className="max-w-[560px]">
+          <Field label={t("quiz_language")} hint={t("quiz_language_hint")}>
+            <select value={form.language ?? ""} onChange={(e) => changeLanguage(e.target.value)} className="input cursor-pointer">
+              {QUIZ_LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.native === l.name ? l.native : `${l.native} (${l.name})`}
+                </option>
+              ))}
+              <optgroup label={t("lang_other_group")}>
+                <option value="">{t("lang_bilingual")}</option>
+              </optgroup>
+            </select>
+          </Field>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
+          {single ? (
+            <>
+              <Field label={`${t("f_title")} (${langName})`}>
+                <input
+                  {...ta}
+                  value={form.title.tr}
+                  onChange={(e) =>
+                    update((f) => {
+                      f.title.tr = e.target.value;
+                      if (!slugTouched) f.slug = slugify(e.target.value);
+                    })
+                  }
+                  className="input"
+                  maxLength={120}
+                />
+              </Field>
+              <Field label={`${t("f_desc")} (${langName})`}>
+                <textarea {...ta} value={form.description.tr} onChange={(e) => update((f) => (f.description.tr = e.target.value))} rows={2} className="input" maxLength={600} />
+              </Field>
+            </>
+          ) : (
+            <>
           <Field label={t("title_tr")}>
             <input
               value={form.title.tr}
@@ -205,6 +280,8 @@ export default function EditorPage() {
           <Field label={t("desc_en")}>
             <textarea value={form.description.en} onChange={(e) => update((f) => (f.description.en = e.target.value))} rows={2} className="input" maxLength={600} />
           </Field>
+            </>
+          )}
           <Field label={t("slug")} hint={`/quiz/${form.slug || "…"}`}>
             <input
               value={form.slug}
@@ -216,7 +293,7 @@ export default function EditorPage() {
             />
           </Field>
           <Field label={t("tags")}>
-            <input value={form.tags} onChange={(e) => update((f) => (f.tags = e.target.value))} placeholder="Temeller, Gizlilik" className="input" />
+            <input value={form.tags} onChange={(e) => update((f) => (f.tags = e.target.value))} placeholder={lang === "tr" ? "Temeller, Gizlilik" : "Basics, Privacy"} className="input" />
           </Field>
           <Field label={t("icon")}>
             <select value={form.icon} onChange={(e) => update((f) => (f.icon = e.target.value))} className="input cursor-pointer">
@@ -238,7 +315,7 @@ export default function EditorPage() {
             <div className="flex items-center gap-3 px-5 py-3">
               <button onClick={() => update((f) => (f.questions[qi].open = !f.questions[qi].open), false)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-tint tabular-nums text-sm font-bold text-accent">{qi + 1}</span>
-                <span className={`truncate font-medium ${preview ? "" : "text-soft"}`}>{preview || t("question_n", { n: qi + 1 })}</span>
+                <span {...ta} className={`truncate font-medium ${preview ? "" : "text-soft"}`}>{preview || t("question_n", { n: qi + 1 })}</span>
                 <ChevronDown className={`ml-auto h-4 w-4 shrink-0 text-soft transition ${q.open ? "rotate-180" : ""}`} />
               </button>
               <button disabled={qi === 0} onClick={() => update((f) => f.questions.splice(qi - 1, 0, f.questions.splice(qi, 1)[0]))} className="rounded p-1.5 text-soft hover:text-ink disabled:opacity-30" title={t("move_up")}>
@@ -254,6 +331,11 @@ export default function EditorPage() {
 
             {q.open && (
               <div className="space-y-4 border-t border-line p-5">
+                {single ? (
+                  <Field label={t("f_question")}>
+                    <textarea {...ta} value={q.text.tr} onChange={(e) => update((f) => (f.questions[qi].text.tr = e.target.value))} rows={2} className="input" />
+                  </Field>
+                ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label={t("question_tr")}>
                     <textarea value={q.text.tr} onChange={(e) => update((f) => (f.questions[qi].text.tr = e.target.value))} rows={2} className="input" />
@@ -262,6 +344,7 @@ export default function EditorPage() {
                     <textarea value={q.text.en} onChange={(e) => update((f) => (f.questions[qi].text.en = e.target.value))} rows={2} className="input" />
                   </Field>
                 </div>
+                )}
 
                 <div className="space-y-2">
                   {q.options.map((o, oi) => {
@@ -276,8 +359,14 @@ export default function EditorPage() {
                         >
                           {isC ? <Check className="h-5 w-5" /> : <Shape shape={st.shape} className="h-4 w-4" />}
                         </button>
-                        <input value={o.tr} onChange={(e) => update((f) => (f.questions[qi].options[oi].tr = e.target.value))} placeholder={`${t("option_n", { n: oi + 1 })} (TR)`} className="input min-w-0 py-2" />
-                        <input value={o.en} onChange={(e) => update((f) => (f.questions[qi].options[oi].en = e.target.value))} placeholder={`${t("option_n", { n: oi + 1 })} (EN)`} className="input min-w-0 py-2" />
+                        {single ? (
+                          <input {...ta} value={o.tr} onChange={(e) => update((f) => (f.questions[qi].options[oi].tr = e.target.value))} placeholder={t("option_n", { n: oi + 1 })} className="input min-w-0 py-2" />
+                        ) : (
+                          <>
+                            <input value={o.tr} onChange={(e) => update((f) => (f.questions[qi].options[oi].tr = e.target.value))} placeholder={`${t("option_n", { n: oi + 1 })} (TR)`} className="input min-w-0 py-2" />
+                            <input value={o.en} onChange={(e) => update((f) => (f.questions[qi].options[oi].en = e.target.value))} placeholder={`${t("option_n", { n: oi + 1 })} (EN)`} className="input min-w-0 py-2" />
+                          </>
+                        )}
                         <button
                           disabled={q.options.length <= 2}
                           onClick={() =>
@@ -302,6 +391,11 @@ export default function EditorPage() {
                   )}
                 </div>
 
+                {single ? (
+                  <Field label={t("f_explanation")}>
+                    <input {...ta} value={q.explanation.tr} onChange={(e) => update((f) => (f.questions[qi].explanation.tr = e.target.value))} className="input" />
+                  </Field>
+                ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label={t("explanation_tr")}>
                     <input value={q.explanation.tr} onChange={(e) => update((f) => (f.questions[qi].explanation.tr = e.target.value))} className="input" />
@@ -310,6 +404,7 @@ export default function EditorPage() {
                     <input value={q.explanation.en} onChange={(e) => update((f) => (f.questions[qi].explanation.en = e.target.value))} className="input" />
                   </Field>
                 </div>
+                )}
               </div>
             )}
           </section>
@@ -330,7 +425,7 @@ export default function EditorPage() {
       </button>
 
       {/* ---------- Sabit alt çubuk ---------- */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card/95 backdrop-blur lg:left-[232px]">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card/95 backdrop-blur">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-3 px-4 py-3">
           {msg ? <span className={`text-sm font-medium ${msg.kind === "ok" ? "text-emerald-500" : "text-[#E8742A]"}`}>{msg.text}</span> : dirty && <span className="text-sm text-soft">{t("unsaved")}</span>}
           <div className="ml-auto flex gap-2">

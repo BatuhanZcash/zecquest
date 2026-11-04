@@ -32,6 +32,8 @@ export interface QuizCardData {
   description: LocalText | null;
   icon: string;
   cover_url?: string | null;
+  /** Tek dilli quizin dil kodu (en, es, hi…); null = iki dilli (TR + EN) */
+  language?: string | null;
   tags: string[];
   featured: boolean;
   status: QuizStatus;
@@ -65,6 +67,7 @@ export interface EditableQuiz {
   description: LocalText | null;
   icon: string;
   cover_url?: string | null;
+  language?: string | null;
   tags: string[];
   default_time: number;
   status?: QuizStatus;

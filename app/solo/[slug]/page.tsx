@@ -251,7 +251,7 @@ function Solo() {
         <div className="card mt-4 p-4 sm:p-6">
           <div className="mb-5 flex items-center gap-4">
             <Countdown remainingMs={result ? 0 : remaining} totalSec={q.time_limit} size={56} />
-            <h2 className="flex-1 text-lg font-semibold leading-snug sm:text-2xl">{lt(q.text)}</h2>
+            <h2 dir="auto" className="flex-1 text-lg font-semibold leading-snug sm:text-2xl">{lt(q.text)}</h2>
             <div className="hidden text-right sm:block">
               <p className="label">{t("your_score")}</p>
               <p className="tabular-nums text-xl font-bold text-accent">{fmt(score)}</p>
@@ -293,7 +293,7 @@ function Solo() {
                   {result.choice === null ? t("times_up") : ok ? t("correct_answer") : t("wrong_answer")}
                   {result.points > 0 && <span className="ml-2 tabular-nums">{t("plus_points", { n: result.points })}</span>}
                 </p>
-                {result.explanation && <p className="mt-1 text-sm text-ink/80">{lt(result.explanation)}</p>}
+                {result.explanation && <p dir="auto" className="mt-1 text-sm text-ink/80">{lt(result.explanation)}</p>}
               </div>
             </div>
           )}

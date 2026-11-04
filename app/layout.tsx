@@ -45,7 +45,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr" data-theme="light" translate="no" className="notranslate" suppressHydrationWarning>
+    <html lang="en" data-theme="light" translate="no" className="notranslate" suppressHydrationWarning>
       <head>
         {/* Site kendi TR/EN çevirisine sahip; tarayıcının otomatik çevirisi metinleri bozmasın */}
         <meta name="google" content="notranslate" />

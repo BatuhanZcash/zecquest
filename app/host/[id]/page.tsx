@@ -241,7 +241,7 @@ function HostConsole({ gameId }: { gameId: string }) {
                   <Trophy className="h-10 w-10 text-accent" />
                 </span>
               )}
-              <h1 className="flex-1 text-2xl font-bold leading-tight sm:text-4xl">{lt(q.text)}</h1>
+              <h1 dir="auto" className="flex-1 text-2xl font-bold leading-tight sm:text-4xl">{lt(q.text)}</h1>
             </div>
 
             {state.status === "reveal" && state.reveal && (
@@ -274,7 +274,7 @@ function HostConsole({ gameId }: { gameId: string }) {
               ))}
             </div>
             {state.status === "reveal" && state.reveal?.explanation && (
-              <p className="mt-6 animate-rise rounded-xl bg-tint p-4 text-center text-lg">{lt(state.reveal.explanation)}</p>
+              <p dir="auto" className="mt-6 animate-rise rounded-xl bg-tint p-4 text-center text-lg">{lt(state.reveal.explanation)}</p>
             )}
           </div>
         )}

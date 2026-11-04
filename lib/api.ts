@@ -42,8 +42,9 @@ export const api = {
   publicProfile: (u: string) => call<PublicProfile | null>("get_public_profile", { p_username: u }),
 
   /* ---------- Quiz ---------- */
-  listQuizzes: (o: { search?: string; tag?: string; sort?: string; limit?: number; offset?: number } = {}) =>
+  listQuizzes: (o: { search?: string; tag?: string; sort?: string; language?: string; limit?: number; offset?: number } = {}) =>
     call<QuizCardData[]>("list_quizzes", {
+      p_language: o.language || null,
       p_search: o.search || null,
       p_tag: o.tag || null,
       p_sort: o.sort || "featured",
@@ -51,6 +52,7 @@ export const api = {
       p_offset: o.offset ?? 0,
     }),
   listTags: () => call<string[]>("list_tags"),
+  listQuizLanguages: () => call<{ code: string; count: number }[]>("list_quiz_languages"),
   getQuiz: (slug: string) => call<QuizDetail | null>("get_quiz", { p_slug: slug }),
 
   /* ---------- Stüdyo ---------- */

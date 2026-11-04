@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, Loader2, Play } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Languages, Loader2, Play } from "lucide-react";
+import { languageLabel, textAttrs } from "@/lib/languages";
 import { QuizCover } from "./QuizCover";
 import { useI18n } from "@/lib/i18n";
 import type { QuizCardData } from "@/lib/types";
@@ -83,9 +84,15 @@ export function QuizCard({ quiz, compact = false, href }: { quiz: QuizCardData; 
             {t("questions_n", { n: quiz.question_count })}
           </span>
         )}
+        {!compact && (
+          <span className="absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-[#14161B]/85 px-2.5 py-1 text-[12px] font-semibold text-white shadow-sm" title={t("quiz_language")}>
+            <Languages className="h-3.5 w-3.5" aria-hidden="true" />
+            {languageLabel(quiz.language)}
+          </span>
+        )}
       </div>
       <div className={compact ? "px-1.5 pb-1.5 pt-2.5" : "px-2 pb-2 pt-3"}>
-        <h3 className={`font-display font-bold leading-snug tracking-[-0.01em] ${compact ? "truncate text-[14px]" : "line-clamp-2 min-h-[2.6em] text-[16.5px]"}`}>{lt(quiz.title)}</h3>
+        <h3 {...textAttrs(quiz.language)} className={`font-display font-bold leading-snug tracking-[-0.01em] ${compact ? "truncate text-[14px]" : "line-clamp-2 min-h-[2.6em] text-[16.5px]"}`}>{lt(quiz.title)}</h3>
         <div className="mt-2 flex items-center justify-between gap-3 text-[13px] text-muted">
           <span className="flex min-w-0 items-center gap-2">
             <Avatar name={author} size={20} />
@@ -172,7 +179,7 @@ export function AnswerButton({
       } ${state === "picked" ? "outline outline-4 outline-offset-2 outline-zec" : ""} disabled:cursor-default`}
     >
       <Shape shape={s.shape} className={`h-9 w-9 text-lg ${s.badge}`} />
-      <span className="leading-snug">{label}</span>
+      <span dir="auto" className="leading-snug">{label}</span>
       {state === "correct" && (
         <span className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-emerald-500 px-2 py-0.5 text-xs font-bold text-white">
           ✓

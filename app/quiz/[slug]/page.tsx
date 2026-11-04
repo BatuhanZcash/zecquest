@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { Play, Radio, Trophy } from "lucide-react";
+import { Languages, Play, Radio, Trophy } from "lucide-react";
+import { languageLabel, textAttrs } from "@/lib/languages";
 import { QuizCover } from "@/components/QuizCover";
 import { Alert, Avatar, BackButton, ErrorBox, PageLoader, Spinner, hashIndex } from "@/components/ui";
 import { useI18n } from "@/lib/i18n";
@@ -60,16 +61,20 @@ export default function QuizDetailPage() {
         <QuizCover icon={quiz.icon} cover={quiz.cover_url} index={hashIndex(quiz.id)} big className="aspect-[16/10] rounded-[20px] lg:aspect-auto lg:min-h-[380px]" />
 
         <div className="flex flex-col px-2 pb-3 lg:py-6 lg:pr-6">
-          {!!quiz.tags?.length && (
+          {(
             <div className="flex flex-wrap gap-2">
-              {quiz.tags.map((tg) => (
+              <Link href={quiz.language ? `/explore?lang=${encodeURIComponent(quiz.language.split("-")[0])}` : "/explore"} className="inline-flex items-center gap-1.5 rounded-full bg-tint px-3 py-1 text-[13px] font-semibold text-ink" title={t("quiz_language")}>
+                <Languages className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
+                {languageLabel(quiz.language)}
+              </Link>
+              {(quiz.tags ?? []).map((tg) => (
                 <Link key={tg} href={`/explore?q=${encodeURIComponent(tg)}`} className="rounded-full border border-line px-3 py-1 text-[13px] font-medium text-muted hover:border-[rgb(var(--soft))] hover:text-ink">
                   {tg}
                 </Link>
               ))}
             </div>
           )}
-          <h1 className="font-display mt-4 text-[32px] font-extrabold leading-[1.05] tracking-[-0.03em] sm:text-[40px]">{lt(quiz.title)}</h1>
+          <h1 {...textAttrs(quiz.language)} className="font-display mt-4 text-[32px] font-extrabold leading-[1.05] tracking-[-0.03em] sm:text-[40px]">{lt(quiz.title)}</h1>
 
           <div className="mt-4 flex items-center gap-2.5 text-[14px] text-muted">
             <Avatar name={author} size={28} />
@@ -82,7 +87,7 @@ export default function QuizDetailPage() {
             )}
           </div>
 
-          {quiz.description && <p className="mt-4 max-w-[52ch] whitespace-pre-line text-[16px] leading-relaxed text-muted">{lt(quiz.description)}</p>}
+          {quiz.description && <p {...textAttrs(quiz.language)} className="mt-4 max-w-[52ch] whitespace-pre-line text-[16px] leading-relaxed text-muted">{lt(quiz.description)}</p>}
 
           <dl className="mt-6 grid max-w-md grid-cols-3 gap-3">
             <Stat label={t("questions_cap")} value={quiz.question_count} />

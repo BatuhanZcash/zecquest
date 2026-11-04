@@ -331,6 +331,17 @@ const dict = {
   err_cover_upload: { tr: "Fotoğraf yüklenemedi. Tekrar dene.", en: "Could not upload the photo. Please try again." },
   err_cover_type: { tr: "Lütfen bir görsel dosyası seç (JPG, PNG, WEBP).", en: "Please choose an image file (JPG, PNG, WEBP)." },
   err_invalid_cover: { tr: "Kapak fotoğrafı geçersiz.", en: "Invalid cover photo." },
+  err_invalid_language: { tr: "Quiz dili geçersiz.", en: "Invalid quiz language." },
+  quiz_language: { tr: "Quiz dili", en: "Quiz language" },
+  quiz_language_hint: { tr: "Quizi tek bir dilde hazırla; katılımcılar soruları bu dilde görür.", en: "Write the quiz in one language; players see the questions in this language." },
+  lang_bilingual: { tr: "Türkçe + İngilizce (iki dilli)", en: "Turkish + English (bilingual)" },
+  lang_other_group: { tr: "Diğer seçenek", en: "Other option" },
+  lang_all: { tr: "Tüm diller", en: "All languages" },
+  lang_switch_confirm: { tr: "İki dilli moddan çıkınca diğer dildeki metinler silinir. Devam edilsin mi?", en: "Leaving bilingual mode removes the text in the other language. Continue?" },
+  f_title: { tr: "Başlık", en: "Title" },
+  f_desc: { tr: "Açıklama", en: "Description" },
+  f_question: { tr: "Soru", en: "Question" },
+  f_explanation: { tr: "Açıklama (isteğe bağlı)", en: "Explanation (optional)" },
   tags: { tr: "Etiketler (virgülle)", en: "Tags (comma separated)" },
   default_time: { tr: "Varsayılan süre (sn)", en: "Default time (s)" },
   question_n: { tr: "Soru {n}", en: "Question {n}" },
@@ -455,13 +466,13 @@ export function resolveText(text: LocalText | null | undefined, lang: Lang): str
 }
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>("tr");
+  const [lang, setLangState] = useState<Lang>("en");
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem("zq-lang") as Lang | null;
+      // Site ilk açılışta İngilizce; Türkçe yalnızca kullanıcı seçerse
       if (saved === "tr" || saved === "en") setLangState(saved);
-      else if (!navigator.language.toLowerCase().startsWith("tr")) setLangState("en");
     } catch {}
   }, []);
 

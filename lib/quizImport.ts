@@ -42,6 +42,8 @@ export function parseQuizJson(raw: string): EditableQuiz[] {
       description: q.description ? text(q.description) : null,
       icon: typeof q.icon === "string" ? q.icon : "shield",
       cover_url: typeof q.cover_url === "string" ? q.cover_url : null,
+      // "language": "es" gibi tek dilli quiz; yoksa metinlerin biçimine bakılır ({tr,en} = iki dilli)
+      language: typeof q.language === "string" && q.language ? q.language : null,
       tags: Array.isArray(q.tags) ? q.tags.map(String).slice(0, 6) : [],
       default_time: Number(q.default_time ?? q.defaultTime ?? 20) || 20,
       questions: q.questions.map((x: any) => ({
