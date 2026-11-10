@@ -1,5 +1,10 @@
 "use client";
 
+import { homeDict } from "./i18n-extra/home";
+import { newsDict } from "./i18n-extra/news";
+import { learnDict } from "./i18n-extra/learn";
+import { gamesDict } from "./i18n-extra/games";
+import { communityDict } from "./i18n-extra/community";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { LocalText } from "./types";
 
@@ -443,6 +448,11 @@ const dict = {
   footer_rights: { tr: "Zcash topluluğu için geliştirildi.", en: "Built for the Zcash community." },
   terms: { tr: "Kullanım Koşulları", en: "Terms of Use" },
   privacy: { tr: "Gizlilik", en: "Privacy" },
+  ...homeDict,
+  ...newsDict,
+  ...learnDict,
+  ...gamesDict,
+  ...communityDict,
 } satisfies Record<string, { tr: string; en: string }>;
 
 export type DictKey = keyof typeof dict;
