@@ -175,3 +175,20 @@ export interface AdminUser {
   creator_request_note: string | null;
   email: string | null;
 }
+
+// ---------- İlerleme / XP (0008) ----------
+export interface XpProgress {
+  xp: number;
+  level: number;
+  level_floor: number;
+  next_level_at: number;
+  awarded?: number;
+  done?: { source: string; ref: string }[];
+}
+export type XpSource = "lesson" | "lesson_quiz" | "glossary" | "news_read" | "game_level" | "game_stars" | "event_join";
+/** XP ver (giriş gerekir; misafir oturumu da sayılır). Aynı kaynak+ref için yalnızca bir kez XP verilir. */
+export const awardXp = (source: XpSource, ref: string) => call<XpProgress>("award_xp", { p_source: source, p_ref: ref });
+export const getMyProgress = () => call<XpProgress>("get_my_progress");
+export const xpLeaderboard = (limit = 50) =>
+  call<{ id: string; display_name: string; username: string | null; country: string | null; xp: number; level: number }[]>(
+    "xp_leaderboard", { p_limit: limit });
