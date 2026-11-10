@@ -1,0 +1,53 @@
+{
+ "id": 1002,
+ "title": "Question about syncing my wallet after the upgrade",
+ "slug": "wallet-sync-question",
+ "posts_count": 2,
+ "highest_post_number": 2,
+ "created_at": "2026-11-05T14:00:00.000Z",
+ "category_id": 5,
+ "like_count": 1,
+ "details": {
+  "created_by": {
+   "id": 2,
+   "username": "newbie123"
+  },
+  "participants": [
+   {
+    "username": "newbie123"
+   },
+   {
+    "username": "helper1"
+   }
+  ]
+ },
+ "post_stream": {
+  "posts": [
+   {
+    "id": 21,
+    "name": null,
+    "username": "newbie123",
+    "post_number": 1,
+    "created_at": "2026-11-05T14:00:00.000Z",
+    "cooked": "<p>Someone told me my wallet will stop working after the upgrade. Is that true?</p>",
+    "reply_to_post_number": null,
+    "actions_summary": [
+     {
+      "id": 2,
+      "count": 1
+     }
+    ]
+   },
+   {
+    "id": 22,
+    "name": null,
+    "username": "helper1",
+    "post_number": 2,
+    "created_at": "2026-11-05T15:30:00.000Z",
+    "cooked": "<p>Update your wallet app to the latest version.</p>",
+    "reply_to_post_number": null,
+    "actions_summary": []
+   }
+  ]
+ }
+}

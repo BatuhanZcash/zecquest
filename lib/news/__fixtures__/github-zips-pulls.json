@@ -1,0 +1,22 @@
+[
+ {
+  "number": 1101,
+  "title": "Fix typos in the ZIP process document",
+  "html_url": "https://github.com/zcash/zips/pull/1101",
+  "merged_at": "2026-11-05T18:00:00Z",
+  "user": {
+   "login": "daira"
+  },
+  "body": "Typo fixes."
+ },
+ {
+  "number": 1102,
+  "title": "Closed without merge",
+  "html_url": "https://github.com/zcash/zips/pull/1102",
+  "merged_at": null,
+  "user": {
+   "login": "someone"
+  },
+  "body": ""
+ }
+]

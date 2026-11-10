@@ -1,0 +1,23 @@
+[
+ {
+  "html_url": "https://github.com/ZcashFoundation/zebra/releases/tag/v7.0.0",
+  "tag_name": "v7.0.0",
+  "name": "Zebra 7.0.0",
+  "draft": false,
+  "prerelease": false,
+  "published_at": "2026-11-05T08:00:00Z",
+  "author": {
+   "login": "zfnd-bot"
+  },
+  "body": "## Zebra 7.0.0\n\nThis release adds support for **NU7** on Mainnet. Node operators must upgrade before activation.\n\n### Changes\n- [NU7](https://zips.z.cash) support"
+ },
+ {
+  "html_url": "https://github.com/ZcashFoundation/zebra/releases/tag/v7.0.0-rc.1",
+  "tag_name": "v7.0.0-rc.1",
+  "name": "Zebra 7.0.0-rc.1",
+  "draft": false,
+  "prerelease": true,
+  "published_at": "2026-10-20T08:00:00Z",
+  "body": "Release candidate."
+ }
+]

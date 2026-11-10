@@ -1,0 +1,77 @@
+{
+ "id": 1001,
+ "title": "Zebra 7.0.0 release & NU7 support",
+ "fancy_title": "Zebra 7.0.0 release &amp; NU7 support",
+ "slug": "zebra-7-0-0-release",
+ "posts_count": 3,
+ "highest_post_number": 3,
+ "created_at": "2026-11-05T09:00:00.000Z",
+ "category_id": 10,
+ "like_count": 24,
+ "details": {
+  "created_by": {
+   "id": 1,
+   "username": "ZcashFoundation"
+  },
+  "participants": [
+   {
+    "username": "ZcashFoundation"
+   },
+   {
+    "username": "alice_node"
+   },
+   {
+    "username": "bob"
+   }
+  ]
+ },
+ "post_stream": {
+  "posts": [
+   {
+    "id": 11,
+    "name": "Zcash Foundation",
+    "username": "ZcashFoundation",
+    "post_number": 1,
+    "created_at": "2026-11-05T09:00:00.000Z",
+    "cooked": "<p>Zebra 7.0.0 is out. It supports <strong>NU7</strong>, which activates at mainnet block 3,543,405.</p><p>zcashd does not support NU7, so node operators need to upgrade to Zebra 7.0.0 before activation.</p><aside class=\"quote\"><blockquote>quoted text</blockquote></aside><img src=\"x.png\">",
+    "reply_to_post_number": null,
+    "actions_summary": [
+     {
+      "id": 2,
+      "count": 20
+     }
+    ]
+   },
+   {
+    "id": 12,
+    "name": null,
+    "username": "alice_node",
+    "post_number": 2,
+    "created_at": "2026-11-05T10:00:00.000Z",
+    "cooked": "<p>Upgraded my node, thanks!</p>",
+    "reply_to_post_number": null,
+    "actions_summary": [
+     {
+      "id": 2,
+      "count": 2
+     }
+    ]
+   },
+   {
+    "id": 13,
+    "name": null,
+    "username": "bob",
+    "post_number": 3,
+    "created_at": "2026-11-05T11:00:00.000Z",
+    "cooked": "<p>Same here &amp; it synced fine.</p>",
+    "reply_to_post_number": null,
+    "actions_summary": [
+     {
+      "id": 2,
+      "count": 2
+     }
+    ]
+   }
+  ]
+ }
+}
