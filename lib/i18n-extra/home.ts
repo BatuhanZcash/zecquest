@@ -1,5 +1,6 @@
 /** home bölümünün çevirileri. Anahtarlar "home_" önekiyle başlar. */
 export const homeDict = {
+  home_nav_news_editor: { tr: "Gündem editörü", en: "News editor" },
   /* ---------- Kabuk / gezinme ---------- */
   home_skip: { tr: "İçeriğe geç", en: "Skip to content" },
   home_nav_news: { tr: "Gündem", en: "News" },

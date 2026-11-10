@@ -187,7 +187,12 @@ export interface XpProgress {
 }
 export type XpSource = "lesson" | "lesson_quiz" | "glossary" | "news_read" | "game_level" | "game_stars" | "event_join";
 /** XP ver (giriş gerekir; misafir oturumu da sayılır). Aynı kaynak+ref için yalnızca bir kez XP verilir. */
-export const awardXp = (source: XpSource, ref: string) => call<XpProgress>("award_xp", { p_source: source, p_ref: ref });
+export const awardXp = async (source: XpSource, ref: string) => {
+  const res = await call<XpProgress>("award_xp", { p_source: source, p_ref: ref });
+  // Menüdeki seviye göstergesi güncellensin (lib/progress.tsx dinler)
+  if (res?.awarded && typeof window !== "undefined") window.dispatchEvent(new Event("zq:xp"));
+  return res;
+};
 export const getMyProgress = () => call<XpProgress>("get_my_progress");
 export const xpLeaderboard = (limit = 50) =>
   call<{ id: string; display_name: string; username: string | null; country: string | null; xp: number; level: number }[]>(

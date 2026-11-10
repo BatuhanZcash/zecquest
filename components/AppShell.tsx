@@ -380,6 +380,7 @@ function MobileMenu({ pathname, onClose }: { pathname: string; onClose: () => vo
   const extra: SubItem[] = [
     { href: "/studio", key: "nav_studio", icon: PenSquare, role: "creator" },
     { href: "/admin", key: "nav_admin", icon: ShieldCheck, role: "admin" },
+    { href: "/admin/news", key: "home_nav_news_editor", icon: Newspaper, role: "admin" },
   ];
 
   const Item = ({ href, label, Icon }: { href: string; label: string; Icon: Icon }) => {
@@ -505,6 +506,7 @@ function UserMenu() {
               {hasRole(profile, "creator") && <MenuLink href="/studio" icon={PenSquare} label={t("nav_studio")} />}
               {hasRole(profile, "creator") && <MenuLink href="/community/manage" icon={CalendarDays} label={t("community_manage")} />}
               {hasRole(profile, "admin") && <MenuLink href="/admin" icon={ShieldCheck} label={t("nav_admin")} />}
+              {hasRole(profile, "admin") && <MenuLink href="/admin/news" icon={Newspaper} label={t("home_nav_news_editor")} />}
               {SITE.competitions && <MenuLink href="/me/prizes" icon={Gift} label={t("nav_prizes")} />}
             </>
           )}

@@ -8,6 +8,7 @@
  *   get_network_status() → { height: int, pools: { <pool>: number(ZEC) | {zec|value|balance: number} },
  *                            next_upgrade: { name, height } | null, updated_at: timestamptz } | null
  */
+import { sectionLabel } from "./news/format";
 import { supabase } from "./supabase";
 import type { LocalText } from "./types";
 import type { Track } from "./content/types";
@@ -55,7 +56,10 @@ export async function getLatestDigest(): Promise<Digest | null> {
       .map((i) => ({
         title: i.title as LocalText,
         summary: isText(i.summary) ? (i.summary as LocalText) : null,
-        section: isText(i.section) ? (i.section as LocalText) : null,
+        section:
+          typeof i.section === "string" && /^[a-z_]+$/.test(i.section)
+            ? { en: sectionLabel(i.section, "en"), tr: sectionLabel(i.section, "tr") }
+            : isText(i.section) ? (i.section as LocalText) : null,
         url: typeof i.url === "string" && /^(https:\/\/|\/)/.test(i.url) ? i.url : null,
       })),
   };
@@ -77,7 +81,8 @@ export async function getNetworkStatus(): Promise<NetworkStatus | null> {
       if (n !== null && n >= 0) pools.push({ key, zec: n });
     }
   }
-  const nu = raw.next_upgrade as Record<string, unknown> | null | undefined;
+  // Gündem: aktivasyondan sonra next_upgrade null olur, last_upgrade dolar → kart "... bloğundan beri aktif" gösterir
+  const nu = (raw.next_upgrade ?? raw.last_upgrade) as Record<string, unknown> | null | undefined;
   const nuHeight = nu ? num(nu.height) : null;
   const status: NetworkStatus = {
     height: num(raw.height),
