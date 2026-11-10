@@ -78,7 +78,6 @@ const SECTIONS: Section[] = [
     match: /^\/(games|arena|explore|quiz|solo|join|leaderboard|results)/,
     items: [
       { href: "/explore", key: "home_nav_quizzes", desc: "home_nav_quizzes_d", icon: Compass },
-      { href: "/games/zeki", key: "home_nav_zeki", desc: "home_nav_zeki_d", icon: Gamepad2 },
       { href: "/arena", key: "home_nav_arena", desc: "home_nav_arena_d", icon: Swords },
       { href: "/join", key: "home_nav_join", desc: "home_nav_join_d", icon: Hash },
       { href: "/leaderboard", key: "nav_leaderboard", desc: "home_nav_leaderboard_d", icon: Trophy },
@@ -543,7 +542,7 @@ function Footer() {
   const { t } = useI18n();
   const cols: { title: DictKey; links: [string, DictKey][] }[] = [
     { title: "home_nav_learn", links: [["/learn", "home_nav_lessons"], ["/glossary", "home_nav_glossary"], ["/about", "nav_about"], ["/news", "home_nav_news"]] },
-    { title: "home_nav_play", links: [["/explore", "home_nav_quizzes"], ["/games/zeki", "home_nav_zeki"], ["/arena", "home_nav_arena"], ["/leaderboard", "nav_leaderboard"]] },
+    { title: "home_nav_play", links: [["/explore", "home_nav_quizzes"], ["/arena", "home_nav_arena"], ["/leaderboard", "nav_leaderboard"]] },
     { title: "home_nav_community", links: [["/community", "home_nav_meetups"], ["/organizers", "nav_organizers"], ["/terms", "terms"], ["/privacy", "privacy"]] },
   ];
   return (

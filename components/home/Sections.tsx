@@ -76,7 +76,6 @@ export function ContinueStrip({
   const done = progress.done ?? [];
   const nl = nextLesson(tracks, done);
   const readToday = !!digestDate && done.some((d) => d.source === "news_read" && d.ref === digestDate);
-  const played = done.some((d) => d.source === "game_level");
 
   const actions: { href: string; icon: typeof BookOpen; title: string; sub: string }[] = [];
   if (nl)
@@ -88,11 +87,7 @@ export function ContinueStrip({
     });
   if (digestDate && !readToday)
     actions.push({ href: `/news/${digestDate}`, icon: Newspaper, title: t("home_act_digest"), sub: digestDate === todayIso() ? t("home_act_digest_sub") : digestDate });
-  actions.push(
-    played
-      ? { href: "/games/zeki", icon: Gamepad2, title: t("home_act_zeki_more"), sub: t("home_act_zeki_sub") }
-      : { href: "/games/zeki", icon: Gamepad2, title: t("home_act_zeki"), sub: t("home_act_zeki_sub") }
-  );
+  actions.push({ href: "/arena", icon: Swords, title: t("home_nav_arena"), sub: t("home_arena_sub") });
   if (!nl) actions.push({ href: "/glossary", icon: BookA, title: t("home_act_glossary"), sub: t("home_act_glossary_sub") });
 
   return (
@@ -201,7 +196,7 @@ export function LearnBlock({ tracks, loading, done }: { tracks: Track[]; loading
 }
 
 /* ---------------------------------------------------------------------
-   Oyna: Zeki, Arena, canlı oda kodu
+   Oyna: quizler, Arena, canlı oda kodu
    --------------------------------------------------------------------- */
 export function PlayBlock() {
   const { t } = useI18n();
@@ -212,11 +207,11 @@ export function PlayBlock() {
     <section aria-labelledby="h-play" className="min-w-0">
       <HomeHead title={t("home_play_title")} sub={t("home_play_sub")} href="/games" cta={t("home_all_games")} />
       <div className="grid gap-3 sm:grid-cols-2">
-        <Link href="/games/zeki" className="group relative overflow-hidden rounded-[20px] bg-[#14161B] p-5 text-white dark:ring-1 dark:ring-white/10">
-          <ZekiArt />
+        <Link href="/explore" className="group relative overflow-hidden rounded-[20px] bg-[#14161B] p-5 text-white dark:ring-1 dark:ring-white/10">
+          <QuizArt />
           <Gamepad2 className="relative h-6 w-6 text-zec" />
-          <p className="relative mt-10 font-display text-[22px] font-extrabold leading-tight">{t("home_nav_zeki")}</p>
-          <p className="relative mt-1 max-w-[62%] text-[13.5px] leading-snug text-white/70">{t("home_zeki_sub")}</p>
+          <p className="relative mt-10 font-display text-[22px] font-extrabold leading-tight">{t("home_nav_quizzes")}</p>
+          <p className="relative mt-1 max-w-[62%] text-[13.5px] leading-snug text-white/70">{t("home_quizzes_sub")}</p>
           <span className="relative mt-4 inline-flex items-center gap-1 text-[13.5px] font-semibold text-zec group-hover:underline">
             {t("home_play_now")}
             <ArrowRight className="h-3.5 w-3.5" />
@@ -261,8 +256,8 @@ export function PlayBlock() {
   );
 }
 
-/** Zeki kartı için soyut, özgün piksel arka plan: basamaklar ve bir altın para */
-function ZekiArt() {
+/** Quiz kartı için soyut, özgün piksel arka plan: basamaklar ve bir altın para */
+function QuizArt() {
   const steps = [
     [150, 118, 40],
     [190, 96, 40],

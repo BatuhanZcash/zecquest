@@ -153,7 +153,7 @@ Doğru cevap = 500 + hıza göre 0–500 + art arda doğru serisi başına +100 
 **Liderlik toplamı** = canlı yarışma skorlarının toplamı + her quiz için en iyi solo skor.
 
 ### Oyna: Zeki'nin Kaçışı ve Arena (`0010_games.sql`)
-- **Zeki** (`/games/zeki`): `components/games/zeki/` içindeki deterministik oyun motoru (60 Hz sabit adım, harici kütüphane yok). Bölüm bitince `submit_game_score` skoru sunucuda sınırlarla denetler (`_game_level_limits`: bölüm başına en kısa makul süre, en yüksek puan, para sayısı). **Bölüm haritalarını değiştirirseniz bu sınırları da güncelleyin** (değerler `sim.ts` → `parseLevel` içindeki `maxScore`, `minTimeMs`, `totals.coins`). İlk bitiriş `game_level`, tüm paralar `game_stars` XP'si verir.
+- **Zeki** platform oyunu şimdilik siteden kaldırıldı (kod git geçmişinde duruyor: `git show c65e8e9:components/games/zeki`). Veritabanındaki `game_scores` / `submit_game_score` fonksiyonları zararsız biçimde yerinde duruyor; oyun geri gelirse yeniden kullanılır.
 - **Arena** (`/arena`): 1'e 1 bilgi düellosu. `arena_find` iki bekleyen oyuncuyu aynı soru dilinde eşleştirir; ~8 sn içinde rakip yoksa açıkça etiketlenmiş, oyuncunun reytingine göre ayarlı bir **pratik botu** gelir. Sorular yayındaki quizlerden gelir; doğru cevap açıklanmadan istemciye gönderilmez. Elo reytingi (insanlara karşı K=32, bota karşı K=16), ligler: Bronz < 1100 ≤ Gümüş < 1300 ≤ Altın < 1500 ≤ Korumalı. Günün ilk 3 galibiyeti `arena_win` XP'si verir. Fazlar istemciler `arena_state` çağırdıkça sunucuda ilerler; pg_cron gerekmez. Realtime "arena:<id>" kanalı yalnızca sürüm numarası yayınlar.
 - Yeni ortam değişkeni yoktur.
 
