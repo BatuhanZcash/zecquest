@@ -170,6 +170,10 @@ export const GLOSSARY: GlossaryTerm[] = [
         en: "Ironwood reuses Orchard receivers, so existing unified addresses keep working. ZEC that moved from Orchard into Ironwood is counted by the turnstile, which lets anyone audit the circulating supply.",
         tr: "Ironwood, Orchard alıcılarını yeniden kullanır; bu sayede mevcut birleşik adresler çalışmaya devam eder. Orchard'dan Ironwood'a geçen ZEC turnike tarafından sayılır ve böylece herkes dolaşımdaki arzı denetleyebilir.",
       },
+      {
+        en: "Orchard funds will eventually need to move to Ironwood. Until your wallet supports this migration, your Orchard funds may be temporarily unavailable, so check your wallet's plan before moving them.",
+        tr: "Orchard'daki fonların eninde sonunda Ironwood'a taşınması gerekecek. Cüzdanın bu geçişi destekleyene kadar Orchard fonların geçici olarak kullanılamayabilir; taşımadan önce cüzdanının planını kontrol et.",
+      },
     ],
     related: ["orchard", "turnstile", "value-pool", "unified-address", "halo-2"],
     sources: [SRC.zip258, SRC.slIronwood, SRC.zodlIronwood],
@@ -183,8 +187,8 @@ export const GLOSSARY: GlossaryTerm[] = [
     },
     body: [
       {
-        en: "Inside a shielded pool amounts are hidden, but the total balance of each pool is public. Because a pool's balance can never go negative, a counterfeiter could never withdraw more than was legitimately deposited. During the Orchard-to-Ironwood migration, the turnstile makes the total supply verifiable by anyone running a node.",
-        tr: "Korumalı bir havuzun içinde tutarlar gizlidir, ancak her havuzun toplam bakiyesi herkese açıktır. Bir havuzun bakiyesi asla eksiye düşemeyeceği için sahte para üreten biri, meşru olarak yatırılandan fazlasını çekemez. Orchard'dan Ironwood'a geçiş sırasında turnike, düğüm çalıştıran herkesin toplam arzı doğrulamasını sağlar.",
+        en: "Inside a shielded pool amounts are hidden, but the total balance of each pool is public. Because a pool's balance can never go negative, a counterfeiter could never withdraw more out of that pool than was deposited into it. During the Orchard-to-Ironwood migration, the turnstile makes the total supply verifiable by anyone running a node.",
+        tr: "Korumalı bir havuzun içinde tutarlar gizlidir, ancak her havuzun toplam bakiyesi herkese açıktır. Bir havuzun bakiyesi asla eksiye düşemeyeceği için sahte para üreten biri o havuzdan, o havuza yatırılandan fazlasını çekemez. Orchard'dan Ironwood'a geçiş sırasında turnike, düğüm çalıştıran herkesin toplam arzı doğrulamasını sağlar.",
       },
     ],
     related: ["value-pool", "orchard", "ironwood"],
@@ -323,12 +327,12 @@ export const GLOSSARY: GlossaryTerm[] = [
     },
     body: [
       {
-        en: "Halo was discovered by Sean Bowe at Electric Coin Co. Halo 2 arrived on mainnet with NU5 in 2022, removing the need for the trusted-setup ceremonies that Sprout and Sapling relied on.",
-        tr: "Halo, Electric Coin Co.'da Sean Bowe tarafından keşfedildi. Halo 2, 2022'de NU5 ile ana ağa geldi ve Sprout ile Sapling'in dayandığı güvenilir kurulum törenlerine olan ihtiyacı ortadan kaldırdı.",
+        en: "Halo was introduced in the 2019 paper \"Recursive Proof Composition without a Trusted Setup\" by Sean Bowe, Jack Grigg and Daira Hopwood. Halo 2 arrived on mainnet with NU5 in 2022, removing the need for the trusted-setup ceremonies that Sprout and Sapling relied on.",
+        tr: "Halo, Sean Bowe, Jack Grigg ve Daira Hopwood'un 2019 tarihli \"Recursive Proof Composition without a Trusted Setup\" makalesiyle tanıtıldı. Halo 2, 2022'de NU5 ile ana ağa geldi ve Sprout ile Sapling'in dayandığı güvenilir kurulum törenlerine olan ihtiyacı ortadan kaldırdı.",
       },
     ],
     related: ["zk-snark", "trusted-setup", "orchard", "ironwood", "nu5"],
-    sources: [SRC.nuGuide, SRC.whoCreated],
+    sources: [SRC.nuGuide, SRC.haloPaper, SRC.whoCreated],
   },
   {
     slug: "trusted-setup",

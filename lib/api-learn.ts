@@ -7,7 +7,7 @@
  * Each (source, ref) is sent at most once per session, so glossary views never spam the server.
  */
 import { useEffect, useSyncExternalStore } from "react";
-import { awardXp, getMyProgress, type XpProgress } from "./api";
+import { ApiError, awardXp, getMyProgress, type XpProgress } from "./api";
 import { useAuth } from "./auth";
 
 export type LearnSource = "lesson" | "lesson_quiz" | "glossary";
@@ -62,8 +62,24 @@ async function loadFor(uid: string) {
     const pending = [...state.local].filter((k) => !server.has(k));
     for (const k of pending) {
       const i = k.indexOf(":");
-      const res = await awardXp(k.slice(0, i) as LearnSource, k.slice(i + 1)).catch(() => null);
-      if (!res || state.uid !== uid) break;
+      let code = "";
+      const res = await awardXp(k.slice(0, i) as LearnSource, k.slice(i + 1)).catch((e: unknown) => {
+        code = e instanceof ApiError ? e.code : "";
+        return null;
+      });
+      if (state.uid !== uid) break;
+      if (!res) {
+        // A lesson/term that no longer exists will never be accepted: forget it so it can't block the queue.
+        if (code === "invalid_ref" || code === "invalid_source") {
+          const local = new Set(state.local);
+          local.delete(k);
+          writeLocal(local);
+          emit({ local });
+          continue;
+        }
+        // xp_daily_limit or a network error: keep the rest on the device and try again next time.
+        break;
+      }
       const s = new Set(state.server);
       s.add(k);
       const local = new Set(state.local);

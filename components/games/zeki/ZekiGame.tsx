@@ -70,6 +70,15 @@ export function ZekiGame({ level, onExit, onNext }: { level: number; onExit: () 
   const tRef = useRef(t);
   tRef.current = t;
   const restartRef = useRef<() => void>(() => {});
+  // Server-issued run token (0012): requested when a run starts, sent with the score at the end.
+  const runRef = useRef<Promise<string | null> | null>(null);
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
+  const beginRun = useCallback(() => {
+    runRef.current = sessionRef.current
+      ? gamesApi.startRun(level).then((r) => r.run_id).catch(() => null)
+      : null;
+  }, [level]);
 
   const setPhase = useCallback((p: Phase) => {
     phaseRef.current = p;
@@ -151,8 +160,13 @@ export function ZekiGame({ level, onExit, onNext }: { level: number; onExit: () 
         return;
       }
       setSave({ state: "saving", newBest: newBestLocal });
-      gamesApi
-        .submitScore({ level, score: r.score, timeMs: r.timeMs, coins: r.coins, noHit: stars.noHit })
+      const run = runRef.current ?? Promise.resolve(null);
+      runRef.current = null;
+      run
+        .then((runId) => {
+          if (!runId) throw new Error("run_token_required");
+          return gamesApi.submitScore({ level, score: r.score, timeMs: r.timeMs, coins: r.coins, noHit: stars.noHit, runId });
+        })
         .then((res) => setSave({ state: "saved", res, newBest: res.new_best || newBestLocal }))
         .catch(() => setSave({ state: "failed", newBest: newBestLocal }));
     },
@@ -195,6 +209,7 @@ export function ZekiGame({ level, onExit, onNext }: { level: number; onExit: () 
 
     const start = () => {
       if (phaseRef.current !== "intro") return;
+      beginRun();
       setPhase("play");
       if (sfx().enabled) sfx().startMusic(def.theme);
     };
@@ -299,6 +314,7 @@ export function ZekiGame({ level, onExit, onNext }: { level: number; onExit: () 
       setResult(null);
       setSave({ state: "idle" });
       setToast(null);
+      beginRun();
       setPhase("play");
       if (sfx().enabled) sfx().startMusic(def.theme);
     };
@@ -312,7 +328,7 @@ export function ZekiGame({ level, onExit, onNext }: { level: number; onExit: () 
       sfx().stopMusic();
       delete window.__zeki;
     };
-  }, [def, handleEvents, finishRun, setPhase]);
+  }, [def, handleEvents, finishRun, setPhase, beginRun]);
 
   // lock page scroll while the game is open
   useEffect(() => {

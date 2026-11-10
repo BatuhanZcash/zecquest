@@ -604,9 +604,13 @@ check("get_latest_digest sözleşmesi: date/title/items[title,summary,section,ur
 arch = rpc(None, "list_digests")
 check("arşiv listesi", arch[0]["date"] == ND and arch[0]["lead"]["title"] == "NU7" and arch[0]["item_count"] == 2, arch)
 check("yayındaki özet silinemez", err(admin, "news_admin_delete_digest", p_date=ND) == "not_found_or_published")
+# news_read yalnızca son 3 günün yayındaki özeti için (0012); bugünün özetini ekle
+RD = sql("select ((now() at time zone 'utc')::date)::text")[0][0]
+if RD != ND:
+    sql("insert into news_digests (date, status, published_at) values (%s::date, 'published', now()) on conflict (date) do update set status='published'", RD)
 check("okuma XP'si (news_read) bir kez verilir",
-      rpc(creator, "award_xp", p_source="news_read", p_ref=ND)["awarded"] == 5
-      and rpc(creator, "award_xp", p_source="news_read", p_ref=ND)["awarded"] == 0)
+      rpc(creator, "award_xp", p_source="news_read", p_ref=RD)["awarded"] == 5
+      and rpc(creator, "award_xp", p_source="news_read", p_ref=RD)["awarded"] == 0)
 
 # Çeviriler
 TRN = {"title": "Día de NU7", "intro": "Resumen", "items": {ids[0]: {"title": "NU7", "summary": "Se activa."}, "bogus": {"title": "x"}}}
@@ -649,6 +653,15 @@ for q in ("delete from news_digests", "delete from news_translations", "delete f
           "delete from news_runs", "update news_settings set next_upgrade_name='NU7', next_upgrade_height=3543405"):
     sql(q)
 
+
+def zsub(uid, **kw):
+    """Zeki koşusu: önce sunucudan koşu bileti al (0012), başlangıcı koşu süresi kadar geriye çek, sonra gönder."""
+    t = rpc(uid, "start_game_run", p_game=kw.get("p_game", "zeki"), p_level=kw["p_level"])
+    sql("update game_run_tokens set started_at = now() - make_interval(secs => %s) where id=%s",
+        (kw["p_time_ms"] + 1000) / 1000.0, t["run_id"])
+    return rpc(uid, "submit_game_score", p_run=t["run_id"], **kw)
+
+
 ZEKI_COINS_1 = sql("select (public._game_level_limits('zeki', 1) ->> 'coins')::int")[0][0]
 
 # =====================================================================
@@ -661,22 +674,22 @@ check("azami puan üstü reddedilir", err(z1, "submit_game_score", p_game="zeki"
 check("bölümdeki paradan fazlası reddedilir", err(z1, "submit_game_score", p_game="zeki", p_level=1, p_score=3000, p_time_ms=60000, p_coins=500) == "implausible_score")
 check("negatif değerler reddedilir", err(z1, "submit_game_score", p_game="zeki", p_level=1, p_score=-5, p_time_ms=60000, p_coins=0) == "implausible_score")
 xp0 = sql("select xp from profiles where id=%s", z1)[0][0]
-r1 = rpc(z1, "submit_game_score", p_game="zeki", p_level=1, p_score=4000, p_time_ms=60000, p_coins=10, p_no_hit=False)
+r1 = zsub(z1, p_game="zeki", p_level=1, p_score=4000, p_time_ms=60000, p_coins=10, p_no_hit=False)
 check("geçerli koşu kaydedilir (bitirme yıldızı)", r1["best_score"] == 4000 and r1["stars"] == 1 and r1["new_best"] is True, r1)
 check("ilk bitirişte game_level XP'si verilir", r1["xp_awarded"] == 50 and sql("select xp from profiles where id=%s", z1)[0][0] == xp0 + 50, r1)
 check("art arda gönderim sınırlanır", err(z1, "submit_game_score", p_game="zeki", p_level=1, p_score=4100, p_time_ms=59000, p_coins=10) == "too_many_requests")
 sql("update game_runs set created_at = created_at - interval '10 seconds'")
-r2 = rpc(z1, "submit_game_score", p_game="zeki", p_level=1, p_score=3500, p_time_ms=40000, p_coins=ZEKI_COINS_1, p_no_hit=True)
+r2 = zsub(z1, p_game="zeki", p_level=1, p_score=3500, p_time_ms=40000, p_coins=ZEKI_COINS_1, p_no_hit=True)
 check("en iyi puan korunur, en iyi süre güncellenir", r2["best_score"] == 4000 and r2["best_time_ms"] == 40000 and r2["new_best"] is False, r2)
 check("yıldızlar birikir (tüm paralar + hasarsız)", r2["stars"] == 7 and r2["coins"] == ZEKI_COINS_1, r2)
 check("tüm paralar için game_stars XP'si, bitirme XP'si tekrar verilmez", r2["xp_awarded"] == 25, r2)
 check("XP olayları tekil", sql("select count(*) from xp_events where user_id=%s and ref='zeki:1'", z1)[0][0] == 2)
 sql("update game_runs set created_at = created_at - interval '10 seconds'")
-rpc(z2, "submit_game_score", p_game="zeki", p_level=1, p_score=5000, p_time_ms=50000, p_coins=20)
+zsub(z2, p_game="zeki", p_level=1, p_score=5000, p_time_ms=50000, p_coins=20)
 zg = str(uuid.uuid4())
 sql("insert into auth.users (id, email, raw_user_meta_data, is_anonymous) values (%s, null, '{}', true)", zg)
 rpc(zg, "guest_start", p_name="Zeki Guest")
-gr = rpc(zg, "submit_game_score", p_game="zeki", p_level=1, p_score=6000, p_time_ms=30000, p_coins=ZEKI_COINS_1)
+gr = zsub(zg, p_game="zeki", p_level=1, p_score=6000, p_time_ms=30000, p_coins=ZEKI_COINS_1)
 check("misafir skoru kaydedilir ama sırası yok", gr["best_score"] == 6000 and gr["rank"] is None, gr)
 lb = rpc(None, "game_leaderboard", p_game="zeki", p_level=1, p_period="all")
 names = [r["username"] for r in lb["rows"]]
@@ -873,6 +886,272 @@ check("misafir arena tablolarında görünmez", all(r["display_name"] != "Arena 
 check("anonim arena oynayamaz", err(None, "arena_find", p_lang="en") is not None)
 check("anonim çevrimiçi sayısını görebilir", isinstance(rpc(None, "arena_online"), int))
 sql("update quizzes set status='published' where id = any(%s::uuid[])", hidden)
+
+# =====================================================================
+print("\n▶ Sertleştirme (0012)")
+
+
+def as_user(uid, q, *a):
+    """Tek bağlantıda, 'authenticated' rolüyle ham SQL (ör. binlerce RPC çağrısı tek DO bloğunda)."""
+    with psycopg.connect(DSN) as conn:
+        with conn.cursor() as c:
+            c.execute("set local role authenticated")
+            c.execute("select set_config('request.jwt.claim.sub', %s, true)", (uid,))
+            c.execute(q, a or None)
+            r = c.fetchall() if c.description else None
+        conn.commit()
+    return r
+
+
+def xp_of(u):
+    return sql("select xp from profiles where id=%s", u)[0][0]
+
+
+LESSON = sql("select slug from learn_refs where kind='lesson' order by slug limit 1")[0][0]
+TERM = sql("select slug from learn_refs where kind='glossary' order by slug limit 1")[0][0]
+hx = new_user("hard_xp")
+# H1 — sunucuya özel kaynaklar istemciden çağrılamaz
+for src, ref in (("game_level", "zeki:3"), ("game_stars", "zeki:3"), ("arena_win", "2026-11-10:1"),
+                 ("event_join", str(uuid.uuid4())), ("free_xp", "x")):
+    check(f"award_xp('{src}') istemciden reddedilir (invalid_source)", err(hx, "award_xp", p_source=src, p_ref=ref) == "invalid_source")
+check("reddedilen kaynak XP vermez", xp_of(hx) == 0 and sql("select count(*) from xp_events where user_id=%s", hx)[0][0] == 0)
+check("sahte ders slug'ı reddedilir", err(hx, "award_xp", p_source="lesson", p_ref="definitely-not-a-lesson") == "invalid_ref")
+check("sahte ders quizi reddedilir", err(hx, "award_xp", p_source="lesson_quiz", p_ref="fake-" + LESSON) == "invalid_ref")
+check("sahte sözlük terimi reddedilir", err(hx, "award_xp", p_source="glossary", p_ref="zzz-not-a-term") == "invalid_ref")
+check("track/slug biçimi değil, çıplak slug beklenir", err(hx, "award_xp", p_source="lesson", p_ref="zcash-basics/" + LESSON) == "invalid_ref")
+check("gerçek ders XP verir (bir kez)", rpc(hx, "award_xp", p_source="lesson", p_ref=LESSON)["awarded"] == 20
+      and rpc(hx, "award_xp", p_source="lesson", p_ref=" " + LESSON + " ")["awarded"] == 0)
+check("gerçek terim XP verir", rpc(hx, "award_xp", p_source="glossary", p_ref=TERM)["awarded"] == 2)
+check("learn_refs içerikteki tüm ders ve terimleri içerir",
+      sql("select count(*) filter (where kind='lesson'), count(*) filter (where kind='glossary') from learn_refs")[0] == (14, 45),
+      sql("select kind, count(*) from learn_refs group by kind"))
+TODAY = sql("select ((now() at time zone 'utc')::date)::text")[0][0]
+OLD = sql("select ((now() at time zone 'utc')::date - 5)::text")[0][0]
+DRAFT = sql("select ((now() at time zone 'utc')::date - 1)::text")[0][0]
+sql("insert into news_digests (date, status, published_at) values (%s::date, 'published', now()), (%s::date, 'published', now()), (%s::date, 'draft', null)",
+    TODAY, OLD, DRAFT)
+check("news_read: yayındaki güncel özet XP verir", rpc(hx, "award_xp", p_source="news_read", p_ref=TODAY)["awarded"] == 5)
+check("news_read: 3 günden eski özet reddedilir", err(hx, "award_xp", p_source="news_read", p_ref=OLD) == "invalid_ref")
+check("news_read: taslak özet reddedilir", err(hx, "award_xp", p_source="news_read", p_ref=DRAFT) == "invalid_ref")
+check("news_read: olmayan / bozuk tarih reddedilir", err(hx, "award_xp", p_source="news_read", p_ref="2031-02-30") == "invalid_ref"
+      and err(hx, "award_xp", p_source="news_read", p_ref="'; drop table x; --") == "invalid_ref")
+sql("delete from news_digests where date in (%s::date, %s::date, %s::date)", TODAY, OLD, DRAFT)
+
+# Günlük üst sınır: 5000 çağrılık döngü (tüm geçerli ref'ler tekrar tekrar)
+hl = new_user("hard_loop")
+REFS = sql("select kind, slug from learn_refs order by kind desc, slug")  # saldırgan içeriği zaten bilir
+REFS_LIT = "array[" + ",".join(f"array['{k}','{v}']" for k, v in REFS) + "]::text[][]"
+as_user(hl, """
+do $$
+declare refs text[][] := """ + REFS_LIT + """;
+        i int; n int := array_length(refs, 1);
+begin
+  for i in 0..4999 loop
+    begin
+      perform public.award_xp(refs[(i % n) + 1][1], refs[(i % n) + 1][2]);
+    exception when others then null;
+    end;
+  end loop;
+end $$""")
+got = xp_of(hl)
+check("5000 çağrılık döngü günlük sınırda durur (≤ 300 XP)", 280 <= got <= 300, got)
+check("sınır aşılınca açık hata: xp_daily_limit",
+      err(hl, "award_xp", p_source="lesson_quiz", p_ref=sql("select slug from learn_refs where kind='lesson_quiz' and slug not in (select ref from xp_events where user_id=%s and source='lesson_quiz') limit 1", hl)[0][0]) == "xp_daily_limit")
+sql("update xp_events set created_at = created_at - interval '1 day' where user_id=%s", hl)
+check("ertesi gün yeniden XP kazanılır", rpc(hl, "award_xp", p_source="lesson_quiz",
+      p_ref=sql("select slug from learn_refs where kind='lesson_quiz' and slug not in (select ref from xp_events where user_id=%s and source='lesson_quiz') limit 1", hl)[0][0])["awarded"] == 30)
+check("sunucu XP'si (oyun) günlük sınıra sayılmaz", sql("select public._grant_xp(%s, 'game_level', 'zeki:2')", hl)[0][0] == 50)
+
+# Engelli kullanıcı
+sql("update profiles set banned = true where id=%s", hx)
+check("engelli kullanıcı XP alamaz (istemci)", err(hx, "award_xp", p_source="glossary", p_ref=sql("select slug from learn_refs where kind='glossary' order by slug desc limit 1")[0][0]) == "banned")
+check("engelli kullanıcı XP alamaz (sunucu)", sql("select public._grant_xp(%s, 'game_level', 'zeki:1')", hx)[0][0] == 0)
+board = rpc(None, "xp_leaderboard", p_limit=100)
+check("XP sıralaması engellileri göstermez", all(r["id"] != hx for r in board) and any(r["id"] == hl for r in board))
+sql("update profiles set banned = false where id=%s", hx)
+check("istemci iç XP yardımcılarını çağıramaz", err(hx, "_grant_xp", p_user=hx, p_source="game_level", p_ref="zeki:3") is not None
+      and err(hx, "_xp_give", p_user=hx, p_source="game_level", p_ref="zeki:3") is not None)
+check("anonim award_xp çağıramaz", err(None, "award_xp", p_source="lesson", p_ref=LESSON) is not None)
+check("0008 fonksiyonlarında search_path sabit",
+      sql("""select bool_and(proconfig::text like '%%search_path=public, pg_temp%%') from pg_proc
+             where pronamespace = 'public'::regnamespace and proname in
+             ('award_xp','get_my_progress','xp_leaderboard','_xp_amount','_xp_level','_xp_progress')""")[0][0] is True)
+
+# M1 — Zeki koşu bileti
+zh = new_user("hard_zeki")
+check("bilet olmadan skor reddedilir", err(zh, "submit_game_score", p_game="zeki", p_level=1, p_score=4000, p_time_ms=60000, p_coins=10) == "run_token_required")
+tk = rpc(zh, "start_game_run", p_game="zeki", p_level=1)
+check("start_game_run bilet ve sunucu zamanı döner", isinstance(tk.get("run_id"), str) and tk["started_at"] > 0, tk)
+check("geçen süreden uzun bildirilen süre reddedilir", err(zh, "submit_game_score", p_game="zeki", p_level=1, p_score=4000,
+      p_time_ms=60000, p_coins=10, p_run=tk["run_id"]) == "implausible_score")
+check("başkasının bileti geçersiz", err(z1, "submit_game_score", p_game="zeki", p_level=1, p_score=4000, p_time_ms=20000,
+      p_coins=10, p_run=tk["run_id"]) == "invalid_run")
+sql("update game_run_tokens set started_at = now() - interval '62 seconds' where id=%s", tk["run_id"])
+check("bilet başka bölümde kullanılamaz", err(zh, "submit_game_score", p_game="zeki", p_level=2, p_score=4000, p_time_ms=60000,
+      p_coins=10, p_run=tk["run_id"]) == "invalid_run")
+LIM1 = sql("select public._game_level_limits('zeki', 1)")[0][0]
+check("azami puan + asgari süre birlikte reddedilir", err(zh, "submit_game_score", p_game="zeki", p_level=1, p_score=LIM1["max_score"],
+      p_time_ms=LIM1["min_ms"], p_coins=LIM1["coins"], p_run=tk["run_id"]) == "implausible_score")
+ok1 = rpc(zh, "submit_game_score", p_game="zeki", p_level=1, p_score=4000, p_time_ms=60000, p_coins=10, p_run=tk["run_id"])
+check("geçerli biletle koşu kabul edilir", ok1["best_score"] == 4000, ok1)
+sql("update game_runs set created_at = created_at - interval '10 seconds' where user_id=%s", zh)
+check("bilet ikinci kez kullanılamaz", err(zh, "submit_game_score", p_game="zeki", p_level=1, p_score=4100, p_time_ms=59000,
+      p_coins=10, p_run=tk["run_id"]) == "invalid_run")
+tk2 = rpc(zh, "start_game_run", p_game="zeki", p_level=1)
+sql("update game_run_tokens set started_at = now() - interval '3 hours' where id=%s", tk2["run_id"])
+check("süresi geçmiş bilet reddedilir", err(zh, "submit_game_score", p_game="zeki", p_level=1, p_score=4000, p_time_ms=60000,
+      p_coins=10, p_run=tk2["run_id"]) == "invalid_run")
+check("bilinmeyen bölüme bilet verilmez", err(zh, "start_game_run", p_game="zeki", p_level=42) == "unknown_level")
+check("anonim bilet alamaz", err(None, "start_game_run", p_game="zeki", p_level=1) is not None)
+
+# L4 — eşzamanlı gönderim ve günlük sınır
+zr = new_user("hard_race")
+toks = [rpc(zr, "start_game_run", p_game="zeki", p_level=1)["run_id"] for _ in range(8)]
+sql("update game_run_tokens set started_at = now() - interval '70 seconds' where user_id=%s", zr)
+race = []
+
+
+def racer(t):
+    try:
+        rpc(zr, "submit_game_score", p_game="zeki", p_level=1, p_score=3000, p_time_ms=60000, p_coins=5, p_run=t)
+        race.append("ok")
+    except RpcError as e:
+        race.append(str(e))
+
+
+ths = [threading.Thread(target=racer, args=(t,)) for t in toks]
+for t in ths: t.start()
+for t in ths: t.join()
+check("aynı anda 8 gönderimden yalnızca 1'i kabul edilir (3 sn kuralı yarışa dayanıklı)",
+      race.count("ok") == 1 and race.count("too_many_requests") == 7, race)
+sql("""insert into game_runs (user_id, game, level, score, time_ms, coins, created_at)
+       select %s, 'zeki', 1, 1000, 60000, 1, now() - interval '1 minute' from generate_series(1, 300)""", zr)
+sql("update game_runs set created_at = created_at - interval '10 seconds' where user_id=%s", zr)
+tk3 = rpc(zr, "start_game_run", p_game="zeki", p_level=1)["run_id"]
+sql("update game_run_tokens set started_at = now() - interval '70 seconds' where id=%s", tk3)
+e300 = err(zr, "submit_game_score", p_game="zeki", p_level=1, p_score=3000, p_time_ms=60000, p_coins=5, p_run=tk3)
+check("günde en fazla 300 koşu kabul edilir", e300 == "daily_limit", e300)
+for role in ("anon", "authenticated"):
+    check(f"{role} learn_refs / game_run_tokens tablolarını okuyamaz",
+          sql(f"select has_table_privilege('{role}', 'public.learn_refs', 'select') or has_table_privilege('{role}', 'public.game_run_tokens', 'select')")[0][0] is False)
+
+# M2 — Arena: misafir ve aynı çift
+sql("delete from arena_queue")
+hidden2 = [r[0] for r in sql("select id from quizzes where id <> %s and status='published'", aq["id"])]
+sql("update quizzes set status='draft' where id = any(%s::uuid[])", hidden2)
+
+
+def arena_pair(pa, pb):
+    rpc(pa, "arena_find", p_lang="en")
+    m = rpc(pb, "arena_find", p_lang="en")
+    assert m["status"] == "matched" and m["bot"] is False, m
+    return m["match_id"]
+
+
+def arena_play(pa, pb, mid):
+    """pa her soruyu doğru, pb yanlış cevaplar; maç bitene kadar ilerletir."""
+    for qi in range(5):
+        for _ in range(5):
+            st = rpc(pa, "arena_state", p_match=mid)
+            if st["status"] == "question" and st["current_q"] == qi:
+                break
+            expire_arena(mid)
+        rpc(pa, "arena_answer", p_match=mid, p_q=qi, p_choice=0)
+        rpc(pb, "arena_answer", p_match=mid, p_q=qi, p_choice=1)
+    for _ in range(4):
+        expire_arena(mid)
+        ea = rpc(pa, "arena_state", p_match=mid)
+        if ea["status"] == "ended":
+            break
+    return ea, rpc(pb, "arena_state", p_match=mid)
+
+
+acct = new_user("hard_acct")
+gg = str(uuid.uuid4())
+sql("insert into auth.users (id, email, raw_user_meta_data, is_anonymous) values (%s, null, '{}', true)", gg)
+rpc(gg, "guest_start", p_name="Throwaway Guest")
+gmid = arena_pair(gg, acct)
+ge_guest, ge_acct = arena_play(gg, acct, gmid)
+check("misafir-hesap maçı oynanır ve biter", ge_acct["status"] == "ended" and ge_guest["winner"] == ge_guest["me"]["slot"])
+check("misafir-hesap maçı reytingsiz (sonuçta rated=false, ±0)",
+      ge_acct["result"]["rated"] is False and ge_acct["result"]["delta"] == 0 and ge_guest["result"]["delta"] == 0, ge_acct["result"])
+check("misafir-hesap maçı hesabın reytingini/kaydını değiştirmez",
+      sql("select rating, matches, losses from arena_ratings where user_id=%s", acct)[0] == (1000, 0, 0))
+check("misafir-hesap maçında XP ve reyting rozeti yok",
+      ge_guest["result"]["xp"] == 0 and not ({"first_win", "on_fire", "giant_slayer", "promoted"} & set(ge_guest["result"]["badges"])), ge_guest["result"])
+check("misafir-hesap maçı haftalık puana sayılmaz", rpc(acct, "my_arena")["weekly_points"] == 0 and rpc(gg, "my_arena")["weekly_points"] == 0)
+pa_, pb_ = new_user("hard_pair_a"), new_user("hard_pair_b")
+res_pair = []
+for i in range(3):
+    mid_i = arena_pair(pa_, pb_)
+    ea, eb = arena_play(pa_, pb_, mid_i)
+    res_pair.append((ea["result"]["rated"], ea["result"]["delta"], ea["result"]["xp"]))
+check("aynı çift: ilk iki maç reytingli", res_pair[0][0] is True and res_pair[1][0] is True and res_pair[0][1] > 0 and res_pair[1][1] > 0, res_pair)
+check("aynı çift: aynı gün 3. maç reytingsiz (±0, XP yok)", res_pair[2] == (False, 0, 0), res_pair)
+check("3. maç reytinge ve maç sayısına yansımaz",
+      sql("select matches, wins from arena_ratings where user_id=%s", pa_)[0] == (2, 2))
+wk_pts = rpc(pa_, "my_arena")["weekly_points"]
+check("reytingsiz maç haftalık puanda yok", wk_pts == sql("select sum(score) from arena_results where user_id=%s and rated", pa_)[0][0]
+      and wk_pts < sql("select sum(score) from arena_results where user_id=%s", pa_)[0][0], wk_pts)
+sql("update quizzes set status='published' where id = any(%s::uuid[])", hidden2)
+
+# M3 — Topluluk
+own = new_user("hard_owner")
+co1, co2 = new_user("hard_co1"), new_user("hard_co2")
+for u in (own,):
+    rpc(admin, "admin_set_role", p_user=u, p_role="creator")
+HC = {"slug": "zcash-hardening", "name": "Zcash Hardening", "country": "DE", "city": "Berlin", "languages": ["en"],
+      "description": "Original description", "links": {"website": "https://example.org"}}
+hc = rpc(own, "save_community", p=HC)
+rpc(admin, "set_community_approved", p_id=hc["id"], p_approved=True)
+rpc(own, "add_community_organizer", p_id=hc["id"], p_username="hard_co1")
+rpc(own, "add_community_organizer", p_id=hc["id"], p_username="hard_co2")
+check("ortak organizatör kurucuyu çıkaramaz", err(co1, "remove_community_organizer", p_id=hc["id"], p_user=own) == "owner_required")
+check("ortak organizatör başka ortak organizatörü çıkaramaz", err(co1, "remove_community_organizer", p_id=hc["id"], p_user=co2) == "owner_required")
+gc = rpc(co1, "get_community", p_slug="zcash-hardening")
+check("organizatör listesinde kurucu işaretli, ortak organizatör çıkaramaz",
+      gc["can_remove_organizers"] is False and [o["owner"] for o in gc["organizers"]] == [True, False, False], gc["organizers"])
+check("kurucu organizatör çıkarabilir", err(own, "remove_community_organizer", p_id=hc["id"], p_user=co2) is None)
+rpc(own, "add_community_organizer", p_id=hc["id"], p_username="hard_co2")
+check("ortak organizatör kendisi ayrılabilir", err(co2, "remove_community_organizer", p_id=hc["id"], p_user=co2) is None)
+rpc(own, "add_community_organizer", p_id=hc["id"], p_username="hard_co2")
+check("yönetici herkesi çıkarabilir", err(admin, "remove_community_organizer", p_id=hc["id"], p_user=co2) is None)
+r_city = rpc(co1, "save_community", p={**HC, "id": hc["id"], "city": "Hamburg"})
+check("onaylı toplulukta yalnızca şehir değişirse onay sürer", r_city["approved"] is True and r_city["needs_review"] is False, r_city)
+r_ed = rpc(co1, "save_community", p={**HC, "id": hc["id"], "city": "Hamburg", "description": "Buy my token!"})
+check("onaylı topluluğun açıklaması değişince yeniden incelemeye düşer", r_ed["approved"] is False and r_ed["needs_review"] is True, r_ed)
+check("incelemedeki topluluk herkese açık listede yok", all(c["slug"] != "zcash-hardening" for c in rpc(None, "list_communities"))
+      and rpc(None, "get_community", p_slug="zcash-hardening") is None)
+check("yönetici onay bekleyenlerde görür", any(c["id"] == hc["id"] for c in rpc(admin, "my_communities")["pending"]))
+rpc(admin, "set_community_approved", p_id=hc["id"], p_approved=True)
+r_adm = rpc(admin, "save_community", p={**HC, "id": hc["id"], "name": "Zcash Hardening Berlin"})
+check("yönetici düzenlemesi onayı korur", r_adm["approved"] is True and r_adm["needs_review"] is False, r_adm)
+r_lnk = rpc(own, "save_community", p={**HC, "id": hc["id"], "name": "Zcash Hardening Berlin", "links": {"website": "https://evil.example"}})
+check("kurucunun bağlantı değişikliği de incelemeye düşer", r_lnk["needs_review"] is True)
+rpc(admin, "set_community_approved", p_id=hc["id"], p_approved=True)
+
+HM = {"community_id": hc["id"], "title": "Hardening meetup", "language": "en", "starts_at": "2030-06-01T16:00:00Z",
+      "ends_at": "2030-06-01T18:00:00Z", "timezone": "Europe/Berlin", "city": "Berlin", "country": "DE", "venue": "Somewhere"}
+hm = rpc(co1, "save_meetup", p=HM)
+check("buluşma listede", any(m["id"] == hm["id"] for m in rpc(None, "list_meetups")))
+check("organizatör buluşma gizleyemez", err(co1, "admin_hide_meetup", p_id=hm["id"], p_hidden=True) == "admin_required")
+check("yönetici buluşmayı gizler", rpc(admin, "admin_hide_meetup", p_id=hm["id"], p_hidden=True)["hidden"] is True)
+check("gizli buluşma herkese açık listede yok", all(m["id"] != hm["id"] for m in rpc(None, "list_meetups", p_limit=200)))
+check("gizli buluşma sayfası kapalı", rpc(None, "get_meetup", p_id=hm["id"]) is None and rpc(fan, "get_meetup", p_id=hm["id"]) is None)
+check("gizli buluşma topluluk sayfasında yok, sayılmaz",
+      all(m["id"] != hm["id"] for m in rpc(None, "get_community", p_slug="zcash-hardening")["upcoming"])
+      and rpc(None, "get_community", p_slug="zcash-hardening")["upcoming_count"] == 0)
+check("gizli buluşmaya katılım yok", err(fan, "rsvp_meetup", p_id=hm["id"], p_going=True) == "not_found")
+check("organizatör gizlendiğini görür", rpc(co1, "get_meetup", p_id=hm["id"])["hidden"] is True)
+al = rpc(admin, "admin_list_meetups")
+check("yönetici moderasyon listesi gizliyi içerir", any(m["id"] == hm["id"] and m["hidden"] for m in al))
+check("oyuncu moderasyon listesini göremez", err(fan, "admin_list_meetups") == "admin_required")
+rpc(admin, "admin_hide_meetup", p_id=hm["id"], p_hidden=False)
+check("yeniden gösterilen buluşma listede", any(m["id"] == hm["id"] for m in rpc(None, "list_meetups", p_limit=200)))
+sql("update profiles set banned = true where id=%s", co1)
+check("engelli kullanıcı organizatör sayılmaz (L2)", rpc(co1, "get_community", p_slug="zcash-hardening")["is_organizer"] is False
+      and err(co1, "meetup_attendees", p_id=hm["id"]) == "forbidden")
+sql("update profiles set banned = false where id=%s", co1)
 
 print(f"\n{len(PASS)} geçti, {len(FAIL)} başarısız")
 if FAIL:

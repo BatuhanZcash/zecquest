@@ -9,6 +9,7 @@
  *           NEWS_FORUM_BASE / NEWS_GITHUB_API / NEWS_BLOCKCHAIR_URL (tests only)
  * Query: ?dry=1 → return the payload without writing; ?date=YYYY-MM-DD → collect the 24h of that UTC day.
  */
+import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { collect } from "@/lib/news/collect";
@@ -34,12 +35,20 @@ async function fetchJson(url: string, init?: { method?: string; headers?: Record
   return res.json();
 }
 
+/** Constant-time check of `Authorization: Bearer <secret>` (a length mismatch is rejected up front). */
+function authorized(header: string | null, secret: string) {
+  const got = Buffer.from(header ?? "", "utf8");
+  const want = Buffer.from(`Bearer ${secret}`, "utf8");
+  if (got.length !== want.length) return false;
+  return timingSafeEqual(got, want);
+}
+
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!secret || !url || !key) return NextResponse.json({ error: "cron_not_configured" }, { status: 500 });
-  if (req.headers.get("authorization") !== `Bearer ${secret}`) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!authorized(req.headers.get("authorization"), secret)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const q = new URL(req.url).searchParams;
   const date = q.get("date");

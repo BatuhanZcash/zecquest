@@ -137,6 +137,8 @@ export interface ArenaState {
     best_streak: number;
     avg_ms: number | null;
     questions: ArenaResultQuestion[];
+    /** false: the match did not count (guest opponent, or a third+ rematch of the same pair today) */
+    rated?: boolean;
   } | null;
   winner: number | null;
 }
@@ -152,7 +154,9 @@ export interface ArenaBoardRow {
 }
 
 export const gamesApi = {
-  submitScore: (p: { level: number; score: number; timeMs: number; coins: number; noHit: boolean }) =>
+  /** Server-issued run token; call when the run starts (0012). The score is only accepted with it. */
+  startRun: (level: number) => call<{ run_id: string; started_at: number }>("start_game_run", { p_game: "zeki", p_level: level }),
+  submitScore: (p: { level: number; score: number; timeMs: number; coins: number; noHit: boolean; runId: string }) =>
     call<SubmitResult>("submit_game_score", {
       p_game: "zeki",
       p_level: p.level,
@@ -160,6 +164,7 @@ export const gamesApi = {
       p_time_ms: p.timeMs,
       p_coins: p.coins,
       p_no_hit: p.noHit,
+      p_run: p.runId,
     }),
   myProgress: () => call<LevelProgress[]>("my_game_progress", { p_game: "zeki" }),
   leaderboard: (level: number, period: Period, limit = 10) =>

@@ -163,4 +163,38 @@ export const communityDict = {
   err_cannot_mark_self: { tr: "Kendi katılımını işaretleyemezsin.", en: "You can't confirm your own attendance." },
   err_not_rsvped: { tr: "Bu kişi katılacağını bildirmemiş.", en: "This person hasn't RSVP'd." },
   err_not_found: { tr: "Bulunamadı.", en: "Not found." },
+  err_owner_required: {
+    tr: "Başka bir organizatörü yalnızca topluluğun kurucusu ya da bir yönetici çıkarabilir.",
+    en: "Only the community's founder or an admin can remove another organizer.",
+  },
+
+  /* ---------- Sertleştirme (0012) ---------- */
+  community_rereview_notice: {
+    tr: "Bu topluluk yayında. Ad, adres, açıklama ya da bağlantıları değiştirirsen ekibimiz yeniden onaylayana kadar herkese açık listeden kalkar.",
+    en: "This community is live. If you change its name, address, description or links, it leaves the public listing until our team approves it again.",
+  },
+  community_rereview_changed: {
+    tr: "Değişikliklerin yeniden incelemeye gidecek. Kaydedince topluluk onaylanana kadar gizlenir.",
+    en: "Your changes will go back to review. Once you save, the community is hidden until it's approved again.",
+  },
+  community_save_for_review: { tr: "Kaydet ve incelemeye gönder", en: "Save and send for review" },
+  community_owner: { tr: "Kurucu", en: "Founder" },
+  community_leave: { tr: "Ayrıl", en: "Leave" },
+  community_owner_only_hint: {
+    tr: "Başka organizatörleri yalnızca kurucu ya da yönetici çıkarabilir; sen istediğin zaman ayrılabilirsin.",
+    en: "Only the founder or an admin can remove other organizers; you can leave at any time.",
+  },
+  community_mod_title: { tr: "Buluşma denetimi", en: "Meetup moderation" },
+  community_mod_sub: {
+    tr: "Yaklaşan ve son 30 günün buluşmaları. Gizlenen buluşma herkese açık listelerden ve sayfasından kalkar; organizatör gizlendiğini görür.",
+    en: "Upcoming meetups and those from the last 30 days. A hidden meetup disappears from public lists and its page; organizers see that it was hidden.",
+  },
+  community_mod_empty: { tr: "Denetlenecek buluşma yok.", en: "No meetups to review." },
+  community_hide: { tr: "Gizle", en: "Hide" },
+  community_unhide: { tr: "Yeniden göster", en: "Unhide" },
+  community_hidden: { tr: "Gizlendi", en: "Hidden" },
+  community_hidden_notice: {
+    tr: "Bu buluşma bir yönetici tarafından gizlendi ve herkese görünmüyor.",
+    en: "An admin has hidden this meetup; it isn't visible to the public.",
+  },
 } satisfies Record<string, { tr: string; en: string }>;

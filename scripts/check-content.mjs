@@ -90,6 +90,32 @@ for (const t of TRACKS) {
   }
 }
 
+// XP allow-list (supabase learn_refs): the newest generated block in the migrations must match the content.
+{
+  const migDir = join(root, "supabase/migrations");
+  let block = null;
+  for (const f of readdirSync(migDir).filter((f) => f.endsWith(".sql")).sort()) {
+    const sqlText = readFileSync(join(migDir, f), "utf8");
+    const i = sqlText.lastIndexOf("-- BEGIN learn_refs");
+    if (i >= 0) block = sqlText.slice(i, sqlText.indexOf("-- END learn_refs", i));
+  }
+  const want = new Set();
+  for (const t of TRACKS)
+    for (const l of t.lessons) {
+      want.add(`lesson/${l.slug}`);
+      if (l.quiz?.length) want.add(`lesson_quiz/${l.slug}`);
+    }
+  for (const g of GLOSSARY) want.add(`glossary/${g.slug}`);
+  const have = new Set(block ? [...block.matchAll(/\('([a-z_]+)', '([a-z0-9-]+)'\)/g)].map((m) => `${m[1]}/${m[2]}`) : []);
+  const missing = [...want].filter((k) => !have.has(k));
+  const extra = [...have].filter((k) => !want.has(k));
+  if (missing.length || extra.length)
+    errors.push(
+      `learn_refs out of date (missing: ${missing.join(", ") || "-"}; stale: ${extra.join(", ") || "-"}). ` +
+        "Run: node scripts/gen-learn-refs.mjs > supabase/migrations/00NN_learn_refs.sql",
+    );
+}
+
 if (errors.length) {
   console.error(errors.join("\n"));
   console.error(`\n${errors.length} problem(s)`);

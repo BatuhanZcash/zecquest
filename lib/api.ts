@@ -185,9 +185,14 @@ export interface XpProgress {
   awarded?: number;
   done?: { source: string; ref: string }[];
 }
-export type XpSource = "lesson" | "lesson_quiz" | "glossary" | "news_read" | "game_level" | "game_stars" | "event_join";
-/** XP ver (giriş gerekir; misafir oturumu da sayılır). Aynı kaynak+ref için yalnızca bir kez XP verilir. */
-export const awardXp = async (source: XpSource, ref: string) => {
+export type XpSource = "lesson" | "lesson_quiz" | "glossary" | "news_read" | "game_level" | "game_stars" | "event_join" | "arena_win";
+/** Tarayıcının isteyebileceği kaynaklar (0012). Diğerlerini yalnızca sunucu verir (oyun, Arena, buluşma). */
+export type ClientXpSource = "lesson" | "lesson_quiz" | "glossary" | "news_read";
+/**
+ * XP ver (giriş gerekir; misafir oturumu da sayılır). Aynı kaynak+ref için yalnızca bir kez XP verilir.
+ * ref: ders/terim slug'ı ya da yayındaki son 3 günün özet tarihi. Hatalar: invalid_ref, xp_daily_limit (günde 300 XP).
+ */
+export const awardXp = async (source: ClientXpSource, ref: string) => {
   const res = await call<XpProgress>("award_xp", { p_source: source, p_ref: ref });
   // Menüdeki seviye göstergesi güncellensin (lib/progress.tsx dinler)
   if (res?.awarded && typeof window !== "undefined") window.dispatchEvent(new Event("zq:xp"));

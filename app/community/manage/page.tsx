@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, CalendarPlus, Check, Clock, ExternalLink, Pencil, Plus, ShieldCheck, Trash2, UserPlus, X } from "lucide-react";
+import { ArrowLeft, CalendarPlus, Check, Clock, Crown, Eye, EyeOff, ExternalLink, LogOut, Pencil, Plus, ShieldCheck, Trash2, UserPlus, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { hasRole, useRequireAuth } from "@/lib/auth";
 import { useAsync } from "@/lib/useAsync";
@@ -13,7 +13,7 @@ import { COUNTRY_CODES, countryName } from "@/lib/countries";
 import { QUIZ_LANGUAGES, findLanguage } from "@/lib/languages";
 import { isoToZoned, timeZones, zonedToIso } from "@/lib/community/time";
 import { Alert, Field, PageLoader, Spinner } from "@/components/ui";
-import { CommunityMark, Empty, viewerZone } from "@/components/community/bits";
+import { CommunityMark, Empty, meetupWhen, viewerZone } from "@/components/community/bits";
 
 export default function ManagePage() {
   return (
@@ -165,8 +165,86 @@ function Dashboard() {
           </ul>
         )}
       </section>
+      {profile?.role === "admin" && <MeetupModeration />}
+
       <p className="text-[13px] leading-relaxed text-soft">{t("community_manage_rules")}</p>
     </div>
+  );
+}
+
+/* Yönetici: buluşma gizle / yeniden göster (0012 admin_hide_meetup) */
+function MeetupModeration() {
+  const { t, te, lang } = useI18n();
+  const q = useAsync(() => communityApi.adminMeetups(), []);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const toggle = async (id: string, hidden: boolean) => {
+    setBusy(id);
+    setErr(null);
+    try {
+      await communityApi.adminHideMeetup(id, hidden);
+      q.reload();
+    } catch (e) {
+      setErr(te(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+  return (
+    <section className="rounded-[20px] border border-line bg-card" data-testid="meetup-moderation">
+      <div className="border-b border-line px-5 py-4">
+        <h2 className="flex items-center gap-2 font-display text-[17px] font-bold">
+          <ShieldCheck className="h-5 w-5 text-accent" />
+          {t("community_mod_title")}
+        </h2>
+        <p className="mt-1 text-[13px] text-muted">{t("community_mod_sub")}</p>
+      </div>
+      {err && (
+        <div className="px-5 pt-4">
+          <Alert>{err}</Alert>
+        </div>
+      )}
+      {q.loading && !q.data ? (
+        <div className="m-5 h-20 animate-pulse rounded-xl bg-input" />
+      ) : !q.data || q.data.length === 0 ? (
+        <p className="px-5 py-6 text-center text-[13.5px] text-muted">{t("community_mod_empty")}</p>
+      ) : (
+        <ul className="divide-y divide-line">
+          {q.data.map((m) => {
+            const w = meetupWhen(m, lang);
+            return (
+              <li key={m.id} className={`flex flex-wrap items-center gap-3 px-5 py-3.5 ${m.hidden ? "opacity-70" : ""}`}>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link href={`/community/meetups/${m.id}`} className="font-semibold hover:text-accent">
+                      {m.title}
+                    </Link>
+                    {m.hidden && (
+                      <span className="chip">
+                        <EyeOff className="h-3 w-3" />
+                        {t("community_hidden")}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[13px] text-muted">
+                    {m.community.name} · {w.day} {w.time}
+                  </p>
+                </div>
+                <button
+                  disabled={busy === m.id}
+                  onClick={() => toggle(m.id, !m.hidden)}
+                  className={`${m.hidden ? "btn-ghost" : "btn-ink"} py-2 text-[13px]`}
+                  data-testid={`hide-${m.id}`}
+                >
+                  {busy === m.id ? <Spinner className="h-4 w-4" /> : m.hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  {m.hidden ? t("community_unhide") : t("community_hide")}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -183,8 +261,12 @@ const slugify = (s: string) =>
     .replace(/^-+|-+$/g, "")
     .slice(0, 48);
 
+const normLinks = (l: CommunityInput["links"] | null | undefined) =>
+  JSON.stringify((["website", "x", "telegram"] as const).map((k) => (l?.[k] ?? "").trim()));
+
 function CommunityForm({ id }: { id: string | null }) {
   const { t, te, lt, lang } = useI18n();
+  const { profile } = useRequireAuth();
   const router = useRouter();
   const mine = useAsync(() => (id ? communityApi.mine() : Promise.resolve(null)), [id]);
   const existing = id ? mine.data?.mine.find((c) => c.id === id) ?? mine.data?.pending.find((c) => c.id === id) ?? null : null;
@@ -221,6 +303,15 @@ function CommunityForm({ id }: { id: string | null }) {
   if (id && !existing) return <Alert>{t("not_found")}</Alert>;
 
   const set = <K extends keyof CommunityInput>(k: K, v: CommunityInput[K]) => setF((s) => ({ ...s, [k]: v }));
+  // 0012: a non-admin edit of an approved community's public text sends it back to review
+  const reviewApplies = !!existing?.approved && profile?.role !== "admin";
+  const reviewTriggered =
+    reviewApplies &&
+    !!existing &&
+    (f.name.trim().replace(/\s+/g, " ") !== existing.name ||
+      f.slug.trim() !== existing.slug ||
+      (typeof f.description === "string" ? f.description.trim() : lt(f.description)) !== (lt(existing.description) || "").trim() ||
+      normLinks(f.links) !== normLinks(existing.links));
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -246,6 +337,15 @@ function CommunityForm({ id }: { id: string | null }) {
 
       <form onSubmit={save} className="card space-y-5 p-6">
         {err && <Alert>{err}</Alert>}
+        {reviewApplies && (
+          <div
+            role="status"
+            data-testid="rereview-notice"
+            className={`rounded-xl px-4 py-3 text-sm font-medium ${reviewTriggered ? "bg-[#E8742A]/10 text-[#E8742A]" : "bg-tint text-accent"}`}
+          >
+            {reviewTriggered ? t("community_rereview_changed") : t("community_rereview_notice")}
+          </div>
+        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t("community_f_name")}>
             <input
@@ -323,13 +423,21 @@ function CommunityForm({ id }: { id: string | null }) {
         <div className="flex flex-wrap items-center gap-3 border-t border-line pt-5">
           <button disabled={busy} className="btn-zec">
             {busy && <Spinner className="h-4 w-4 text-[#1A1506]" />}
-            {existing ? t("save") : t("community_submit")}
+            {existing ? (reviewTriggered ? t("community_save_for_review") : t("save")) : t("community_submit")}
           </button>
           {!existing && <p className="text-[13px] text-muted">{t("community_review_note")}</p>}
         </div>
       </form>
 
-      {existing && detail.data?.organizers && <Organizers id={existing.id} list={detail.data.organizers} reload={detail.reload} />}
+      {existing && detail.data?.organizers && (
+        <Organizers
+          id={existing.id}
+          list={detail.data.organizers}
+          canRemove={!!detail.data.can_remove_organizers}
+          meId={profile?.id ?? null}
+          reload={detail.reload}
+        />
+      )}
     </div>
   );
 }
@@ -373,7 +481,19 @@ function LanguagePicker({ value, onChange }: { value: string[]; onChange: (v: st
   );
 }
 
-function Organizers({ id, list, reload }: { id: string; list: { id: string; username: string | null; display_name: string | null }[]; reload: () => void }) {
+function Organizers({
+  id,
+  list,
+  canRemove,
+  meId,
+  reload,
+}: {
+  id: string;
+  list: { id: string; username: string | null; display_name: string | null; owner?: boolean }[];
+  canRemove: boolean;
+  meId: string | null;
+  reload: () => void;
+}) {
   const { t, te } = useI18n();
   const [u, setU] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -396,17 +516,32 @@ function Organizers({ id, list, reload }: { id: string; list: { id: string; user
       <div>
         <h2 className="section-title">{t("community_organizers")}</h2>
         <p className="text-[13.5px] text-muted">{t("community_organizers_hint")}</p>
+        {!canRemove && <p className="mt-1 text-[13px] text-soft">{t("community_owner_only_hint")}</p>}
       </div>
       {err && <Alert>{err}</Alert>}
       <ul className="divide-y divide-line">
         {list.map((o) => (
           <li key={o.id} className="flex items-center gap-3 py-2.5">
-            <span className="flex-1 text-[14px] font-medium">
-              {o.display_name} {o.username && <span className="text-soft">@{o.username}</span>}
+            <span className="flex flex-1 flex-wrap items-center gap-2 text-[14px] font-medium">
+              <span>
+                {o.display_name} {o.username && <span className="text-soft">@{o.username}</span>}
+              </span>
+              {o.owner && (
+                <span className="chip">
+                  <Crown className="h-3 w-3" />
+                  {t("community_owner")}
+                </span>
+              )}
             </span>
-            {list.length > 1 && (
-              <button disabled={busy} onClick={() => run(() => communityApi.removeOrganizer(id, o.id))} className="rounded-full p-2 text-muted hover:bg-input hover:text-ink" aria-label={t("community_remove")}>
-                <Trash2 className="h-4 w-4" />
+            {list.length > 1 && (canRemove || o.id === meId) && (
+              <button
+                disabled={busy}
+                onClick={() => run(() => communityApi.removeOrganizer(id, o.id))}
+                className="rounded-full p-2 text-muted hover:bg-input hover:text-ink"
+                aria-label={o.id === meId ? t("community_leave") : t("community_remove")}
+                title={o.id === meId ? t("community_leave") : t("community_remove")}
+              >
+                {o.id === meId ? <LogOut className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
               </button>
             )}
           </li>

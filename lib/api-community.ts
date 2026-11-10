@@ -46,6 +46,8 @@ export interface MeetupCard {
   venue: string | null;
   online: boolean;
   cancelled: boolean;
+  /** Taken down by an admin (only organizers/admins ever see hidden meetups) */
+  hidden?: boolean;
   going_count: number;
   me_going: boolean;
   community: { slug: string; name: string; country: string | null };
@@ -53,7 +55,9 @@ export interface MeetupCard {
 
 export interface CommunityDetail extends CommunityCard {
   is_organizer: boolean;
-  organizers: { id: string; username: string | null; display_name: string | null }[] | null;
+  /** Founder (first organizer) or admin: may remove other organizers */
+  can_remove_organizers?: boolean;
+  organizers: { id: string; username: string | null; display_name: string | null; owner?: boolean }[] | null;
   upcoming: MeetupCard[];
   past: MeetupCard[];
 }
@@ -115,7 +119,8 @@ export const communityApi = {
     call<CommunityCard[]>("list_communities", { p_country: o.country || null, p_language: o.language || null }),
   get: (slug: string) => call<CommunityDetail | null>("get_community", { p_slug: slug }),
   mine: () => call<{ mine: CommunityCard[]; pending: CommunityCard[] }>("my_communities"),
-  save: (p: CommunityInput) => call<{ id: string; slug: string; approved: boolean }>("save_community", { p }),
+  /** needs_review: an approved community's public text changed and it went back to review */
+  save: (p: CommunityInput) => call<{ id: string; slug: string; approved: boolean; needs_review?: boolean }>("save_community", { p }),
   setApproved: (id: string, approved: boolean) => call<void>("set_community_approved", { p_id: id, p_approved: approved }),
   addOrganizer: (id: string, username: string) => call<void>("add_community_organizer", { p_id: id, p_username: username }),
   removeOrganizer: (id: string, user: string) => call<void>("remove_community_organizer", { p_id: id, p_user: user }),
@@ -134,6 +139,8 @@ export const communityApi = {
   attendees: (id: string) => call<Attendee[]>("meetup_attendees", { p_id: id }),
   markAttendance: (id: string, user: string, attended: boolean) =>
     call<{ attended: boolean; awarded: number }>("mark_attendance", { p_id: id, p_user: user, p_attended: attended }),
+  adminMeetups: () => call<(MeetupCard & { community_approved: boolean })[]>("admin_list_meetups", { p_limit: 100 }),
+  adminHideMeetup: (id: string, hidden: boolean) => call<{ id: string; hidden: boolean }>("admin_hide_meetup", { p_id: id, p_hidden: hidden }),
   publicProgress: (username: string) =>
     call<{ xp: number; level: number; level_floor: number; next_level_at: number } | null>("get_public_progress", { p_username: username }),
 };

@@ -271,4 +271,10 @@ export const learnDict = {
     tr: "iddia “bu işlem kurallara uyuyor”, sır ise kimin kime ne kadar ödediği. Bir zk-SNARK bunu tek, kısa ve etkileşimsiz bir ispatla kanıtlar.",
     en: "the claim is “this transaction follows the rules” and the secret is who paid whom and how much. A zk-SNARK proves it in a single short proof, with no back-and-forth.",
   },
+  err_invalid_ref: { tr: "Bu içerik XP için tanınmadı.", en: "This item isn't recognised for XP." },
+  err_invalid_source: { tr: "Bu XP türü buradan verilemez.", en: "This kind of XP can't be earned here." },
+  err_xp_daily_limit: {
+    tr: "Bugünlük öğrenme XP sınırına (300) ulaştın. İlerlemen bu cihazda saklanır, XP'n yarın eklenir.",
+    en: "You've reached today's learning XP limit (300). Your progress is kept on this device and the XP is added tomorrow.",
+  },
 } satisfies Record<string, { tr: string; en: string }>;

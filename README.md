@@ -63,6 +63,7 @@ Dosya konana kadar arayüzde yerine sade bir "ZEC" rozeti görünür. Zcash tica
    5. `supabase/migrations/0005_quiz_covers.sql` (kapak fotoğrafları için Storage kovası `quiz-covers` ve izinleri)
    6. `supabase/migrations/0006_guests.sql` (misafir girişi)
    7. `supabase/migrations/0007_quiz_language.sql` (tek dilli quizler: organizatör quizini istediği tek dilde hazırlar)
+   8. `0008_progress_xp.sql` … `0011_community.sql` (XP, Gündem, Oyna, Topluluk) ve `0012_hardening.sql` (güvenlik sertleştirmesi; aşağıya bak)
 3. **Database → Extensions** → `pg_cron`'u aç, sonra `supabase/optional/cron.sql` dosyasını çalıştır. *(Önerilir: kimse bağlı değilken bile planlı yarışmalar zamanında ilerler.)*
 4. **Realtime → Settings**: "Allow public access" / public channels açık olmalı (varsayılan). Oyun durumu herkese açıktır; doğru cevap içermez.
 
@@ -156,6 +157,17 @@ Doğru cevap = 500 + hıza göre 0–500 + art arda doğru serisi başına +100 
 - **Arena** (`/arena`): 1'e 1 bilgi düellosu. `arena_find` iki bekleyen oyuncuyu aynı soru dilinde eşleştirir; ~8 sn içinde rakip yoksa açıkça etiketlenmiş, oyuncunun reytingine göre ayarlı bir **pratik botu** gelir. Sorular yayındaki quizlerden gelir; doğru cevap açıklanmadan istemciye gönderilmez. Elo reytingi (insanlara karşı K=32, bota karşı K=16), ligler: Bronz < 1100 ≤ Gümüş < 1300 ≤ Altın < 1500 ≤ Korumalı. Günün ilk 3 galibiyeti `arena_win` XP'si verir. Fazlar istemciler `arena_state` çağırdıkça sunucuda ilerler; pg_cron gerekmez. Realtime "arena:<id>" kanalı yalnızca sürüm numarası yayınlar.
 - Yeni ortam değişkeni yoktur.
 
+### Sertleştirme (`0012_hardening.sql`)
+- **XP:** tarayıcı `award_xp` ile yalnızca `lesson`, `lesson_quiz`, `glossary`, `news_read` isteyebilir; `game_level`, `game_stars`, `arena_win`, `event_join` yalnızca sunucuda (`_grant_xp`) verilir. Ders/terim ref'leri `learn_refs` izin listesine, `news_read` son 3 günün yayındaki özetine karşı denetlenir. İstemci XP'si kullanıcı başına UTC günü 300 ile sınırlı (`_xp_daily_cap`); engelli hesaplar XP almaz ve XP sıralamasında görünmez.
+- **`learn_refs` içerikle güncel kalmalı.** Ders ya da sözlük terimi eklediğinde, sildiğinde veya slug değiştirdiğinde listeyi yeniden üret ve yeni bir migration olarak ekle (yayındaki migration'ları düzenleme):
+  ```bash
+  node scripts/gen-learn-refs.mjs > supabase/migrations/00NN_learn_refs.sql
+  ```
+  Çıktı tabloyu baştan doldurur (`delete` + `insert`); yeniden çalıştırmak güvenlidir.
+- **Zeki:** skor yalnızca `start_game_run` ile alınan sunucu biletiyle kabul edilir; sunucuda geçen süre bildirilen süreden (2 sn pay) ve bölümün en kısa makul süresinden kısa olamaz; azami puan + asgari süre birlikte reddedilir; kullanıcı başına günde 300 koşu. Tam sunucu simülasyonu yoktur; tablo "en iyi koşular" olarak etiketlenir.
+- **Arena:** misafirin taraf olduğu insan-insan maçları ve aynı iki hesabın aynı UTC günündeki 3. ve sonraki maçları **reytingsizdir** (reyting, seri, XP, reyting rozetleri, haftalık puan değişmez); sonuç ekranında "Reytingsiz maç" yazar.
+- **Topluluk:** onaylı topluluğun ad/adres/açıklama/bağlantılarını yönetici olmayan bir organizatör değiştirirse topluluk yeniden incelemeye düşer. Başka organizatörleri yalnızca kurucu (ilk organizatör) ya da yönetici çıkarabilir; herkes kendisi ayrılabilir. Yönetici `/community/manage` → *Buluşma denetimi* bölümünden buluşmaları gizleyebilir (`admin_hide_meetup`).
+
 ---
 
 ## Uygulama (PWA)
@@ -191,7 +203,7 @@ Elle çalıştırma / geçmiş gün: `curl -H "Authorization: Bearer $CRON_SECRE
 Toplayıcı testleri (ağ gerekmez, `lib/news/__fixtures__`): `npm run test:news`. Kart fontları: `python3 scripts/og-fonts.py`.
 
 ## Testler
-`supabase/tests/test_engine.py` — oyun motorunun 150 testi (roller, 10 saniye kuralı, quiz yaşam döngüsü, tablo erişim güvenliği, sunucu yönetimli ve planlı oyunlar, yenileme sonrası devam, süre aşımı, geç cevap, oyuncu çıkarma, ödüller, solo, liderlik, 60 eşzamanlı oyuncu). Supabase'i taklit eden yerel bir Postgres'te çalışır:
+`supabase/tests/test_engine.py` — 400'ü aşkın test (roller, 10 saniye kuralı, quiz yaşam döngüsü, tablo erişim güvenliği, sunucu yönetimli ve planlı oyunlar, yenileme sonrası devam, süre aşımı, geç cevap, oyuncu çıkarma, ödüller, solo, liderlik, 60 eşzamanlı oyuncu, Gündem, Oyna, Topluluk ve 0012 sertleştirmesi). Supabase'i taklit eden yerel bir Postgres'te çalışır:
 ```bash
 createdb -E UTF8 zq_test
 psql -d zq_test -f supabase/tests/stub.sql

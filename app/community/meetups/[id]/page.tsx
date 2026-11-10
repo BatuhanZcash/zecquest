@@ -53,6 +53,11 @@ function Meetup({ m, reload }: { m: MeetupDetail; reload: () => void }) {
           <div className="min-w-0 flex-1">
             <div className="mb-1.5 flex flex-wrap gap-2">
               {m.cancelled && <span className="chip bg-[#E8742A]/15 text-[#E8742A]">{t("community_cancelled")}</span>}
+              {m.hidden && (
+                <span className="chip bg-[#E8742A]/15 text-[#E8742A]" title={t("community_hidden_notice")}>
+                  {t("community_hidden")}
+                </span>
+              )}
               {live && (
                 <span className="chip bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-current" />
@@ -69,6 +74,11 @@ function Meetup({ m, reload }: { m: MeetupDetail; reload: () => void }) {
             </Link>
           </div>
         </div>
+        {m.hidden && (
+          <p role="status" className="mt-5 rounded-xl bg-[#E8742A]/10 px-4 py-3 text-sm font-medium text-[#E8742A]">
+            {t("community_hidden_notice")}
+          </p>
+        )}
 
         <dl className="mt-6 grid gap-4 border-t border-line pt-6 sm:grid-cols-3">
           <Info icon={<Clock className="h-4 w-4" />} label={t("community_when")}>
@@ -163,7 +173,7 @@ function RsvpCard({ m, reload }: { m: MeetupDetail; reload: () => void }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const going = !!m.me?.going;
-  const canRsvp = !m.cancelled && !m.ended && m.community.approved;
+  const canRsvp = !m.cancelled && !m.hidden && !m.ended && m.community.approved;
 
   const toggle = async () => {
     setBusy(true);

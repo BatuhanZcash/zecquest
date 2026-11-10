@@ -10,6 +10,7 @@ const s = (title: string, url: string): Source => ({ title, url, checked: C });
 export const SRC = {
   whoCreated: s("Who created Zcash? (z.cash)", "https://z.cash/learn/who-created-zcash/"),
   nuGuide: s("Network Upgrade Guide (Zcash documentation)", "https://zcash.readthedocs.io/en/master/rtd_pages/nu_dev_guide.html"),
+  haloPaper: s("Recursive Proof Composition without a Trusted Setup (Bowe, Grigg, Hopwood, 2019; IACR ePrint 2019/1021)", "https://eprint.iacr.org/2019/1021"),
   zip0: s("ZIP index and ZIP 0: ZIP Process", "https://zips.z.cash/"),
   zip205: s("ZIP 205: Deployment of the Sapling Network Upgrade", "https://zips.z.cash/zip-0205"),
   zip208: s("ZIP 208: Shorter Block Target Spacing (Blossom)", "https://zips.z.cash/zip-0208"),

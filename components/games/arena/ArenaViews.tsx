@@ -214,7 +214,13 @@ export function Result({ s, onAgain, onLobby }: { s: ArenaState; onAgain: () => 
       <div className="card mt-6 p-5 text-left">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="label">{t("games_arena_rating")}</p>
+            {r.rated === false ? (
+              <p className="label inline-flex items-center gap-1.5" data-testid="arena-unrated">
+                <span className="rounded-full bg-input px-2 py-0.5 text-[11.5px] font-bold uppercase tracking-wide text-muted">{t("games_arena_unrated")}</span>
+              </p>
+            ) : (
+              <p className="label">{t("games_arena_rating")}</p>
+            )}
             <p className={`font-display text-[36px] font-extrabold leading-none tabular-nums ${r.delta > 0 ? "text-emerald-600 dark:text-emerald-400" : r.delta < 0 ? "text-[#E5484D]" : "text-muted"}`} data-testid="arena-delta">
               {r.delta > 0 ? "+" : ""}{r.delta}
             </p>
@@ -230,6 +236,7 @@ export function Result({ s, onAgain, onLobby }: { s: ArenaState; onAgain: () => 
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-input">
           <div className="h-full rounded-full bg-zec transition-all duration-700" style={{ width: `${Math.max(3, Math.min(100, pct))}%` }} />
         </div>
+        {r.rated === false && <p className="mt-3 text-[13px] leading-snug text-muted">{t("games_arena_unrated_note")}</p>}
       </div>
 
       <div className="mt-3 grid grid-cols-3 gap-3">
