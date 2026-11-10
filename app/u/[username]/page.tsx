@@ -9,12 +9,16 @@ import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { useAsync } from "@/lib/useAsync";
 import { countryName } from "@/lib/countries";
+import { communityApi } from "@/lib/api-community";
+import { levelTitleKey } from "@/lib/progress";
+import { LevelRing } from "@/components/LevelBadge";
 
 export default function ProfilePage() {
   const { username } = useParams<{ username: string }>();
   const { t, lt, fmt, lang } = useI18n();
   const { profile: mine } = useAuth();
   const { data: p, loading } = useAsync(() => api.publicProfile(username), [username]);
+  const xp = useAsync(() => communityApi.publicProgress(username).catch(() => null), [username]);
 
   if (loading && !p) return <PageLoader />;
   if (!p) return <ErrorBox message={t("not_found")} />;
@@ -30,6 +34,13 @@ export default function ProfilePage() {
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-[24px] font-bold tracking-[-0.02em]">{p.display_name}</h1>
             <p className="tabular-nums text-muted">@{p.username}</p>
+            {xp.data && (
+              <p className="mt-2 flex items-center gap-2 text-[14px] font-semibold">
+                <LevelRing progress={xp.data} size={26} />
+                {t(levelTitleKey(xp.data.level))}
+                <span className="font-medium tabular-nums text-muted">· {fmt(xp.data.xp)} XP</span>
+              </p>
+            )}
             <div className="mt-2 flex flex-wrap gap-2 text-sm">
               {p.country && (
                 <span className="chip normal-case tracking-normal">

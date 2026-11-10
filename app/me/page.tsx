@@ -9,6 +9,8 @@ import { useI18n } from "@/lib/i18n";
 import { api } from "@/lib/api";
 import { CountrySelect } from "@/components/CountrySelect";
 import { Alert, Field, PageLoader, Spinner } from "@/components/ui";
+import { ProgressCard } from "@/components/LevelBadge";
+import { useMyProgress } from "@/lib/progress";
 import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
@@ -16,6 +18,7 @@ export default function SettingsPage() {
   const auth = useRequireAuth();
   const { profile, session, refreshProfile, signOut } = useAuth();
   const router = useRouter();
+  const { progress, loading: progressLoading } = useMyProgress();
 
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
@@ -78,6 +81,12 @@ export default function SettingsPage() {
           </Link>}
         </div>
       </div>
+
+      {progress ? (
+        <ProgressCard progress={progress} done={progress.done ?? []} />
+      ) : progressLoading ? (
+        <div id="progress" className="h-[220px] animate-pulse rounded-2xl bg-card ring-1 ring-line" />
+      ) : null}
 
       <form onSubmit={save} className="card space-y-4 p-6">
         {msg && <Alert kind={msg.kind}>{msg.text}</Alert>}
