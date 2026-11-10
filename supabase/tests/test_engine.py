@@ -486,6 +486,169 @@ check("organizatör çıkarılır, son organizatör çıkarılamaz", err(org, "r
       err(fan2, "remove_community_organizer", p_id=cm["id"], p_user=fan2) == "last_organizer")
 check("herkese açık seviye", rpc(None, "get_public_progress", p_username="fanzec")["xp"] == 15)
 
+# ---------------------------------------------------------------------
+print("\n— Gündem (news) —")
+
+
+def svc(fn, **kw):
+    """Cron toplayıcısı gibi: service_role ile çağır."""
+    with psycopg.connect(DSN) as conn:
+        with conn.cursor() as c:
+            c.execute("set local role service_role")
+            args = ", ".join(f"{k} => %s" for k in kw)
+            vals = [Jsonb(v) if isinstance(v, (dict, list)) else v for v in kw.values()]
+            try:
+                c.execute(f"select to_jsonb(public.{fn}({args}))", vals)
+            except psycopg.Error as e:
+                raise RpcError(e.diag.message_primary) from None
+            r = c.fetchone()[0]
+        conn.commit()
+    return r
+
+
+ND = "2026-11-05"
+cfg = svc("news_collector_config")
+check("toplayıcı ayarı: anahtar kişiler + NU7 yükseltmesi", len(cfg["people"]) == 20 and cfg["settings"]["next_upgrade_height"] == 3543405,
+      cfg["settings"])
+check("anonim/üye toplayıcı ayarını okuyamaz",
+      err(None, "news_collector_config") is not None and err(creator, "news_collector_config") is not None)
+check("anonim/üye veri yazamaz (news_ingest)",
+      err(None, "news_ingest", p={"digest_date": ND}) is not None and err(admin, "news_ingest", p={"digest_date": ND}) is not None)
+for role in ("anon", "authenticated"):
+    with psycopg.connect(DSN) as conn:
+        with conn.cursor() as c:
+            c.execute(f"set local role {role}")
+            try:
+                c.execute("select count(*) from news_items")
+                ok = False
+            except psycopg.Error:
+                ok = True
+    check(f"{role} news tablolarını doğrudan okuyamaz", ok)
+
+ITEM = {"external_id": "forum:topic:1", "source": "forum", "url": "https://forum.zcashcommunity.com/t/x/1",
+        "title": "Zebra 7.0.0", "excerpt": "Release notes", "author": "ZcashFoundation", "author_is_key": True,
+        "author_is_official": True, "category": "Zebra", "metrics": {"likes": 4}, "score": 72,
+        "score_breakdown": [{"key": "official", "points": 40}], "tier": "lead", "single_source": False}
+r = svc("news_ingest", p={"digest_date": ND, "items": [ITEM, dict(ITEM, external_id="forum:topic:2", title="Rumor", tier="watch",
+                                                              score=5, single_source=True, author_is_key=False, author_is_official=False)],
+                          "snapshot": {"height": 3540000, "pools": {"sapling": 100.0, "orchard": 200.0, "sprout": 10.0}, "source": "test"}})
+check("toplayıcı öğeleri yazar", r["items"] == 2)
+svc("news_ingest", p={"digest_date": ND, "items": [dict(ITEM, score=80)]})
+items = rpc(admin, "news_admin_items", p_date=ND)
+check("aynı öğe tekrar gelince güncellenir (çift kayıt yok)", len(items) == 2 and items[0]["score"] == 80, [i["score"] for i in items])
+check("tek kaynak öğe editöre 'doğrulanmamış' gelir", any(i["single_source"] for i in items if i["title"] == "Rumor"))
+check("puan dökümü editöre gelir", items[0]["score_breakdown"][0]["key"] == "official")
+check("üye toplanan öğeleri göremez", err(creator, "news_admin_items", p_date=ND) == "admin_required")
+
+# 24 saatlik fark: bir önceki günün anlık görüntüsü
+sql("update news_snapshots set taken_at = now() - interval '24 hours'")
+svc("news_ingest", p={"digest_date": ND, "items": [], "snapshot": {"height": 3543500,
+                      "pools": {"sapling": 110.5, "orchard": 190.0, "sprout": 10.0}, "source": "test"}})
+ns = rpc(None, "get_network_status")
+check("ağ durumu: yükseklik + havuzlar", ns["height"] == 3543500 and ns["pools"]["sapling"] == 110.5)
+check("ağ durumu: 24 saatlik gerçek fark", float(ns["pools_delta_24h"]["sapling"]) == 10.5 and float(ns["shielded_delta_24h"]) == 0.5, ns)
+check("yükseklik aktivasyonu geçince next_upgrade null, last_upgrade dolu",
+      ns["next_upgrade"] is None and ns["last_upgrade"]["name"] == "NU7", ns)
+check("üye yükseltmeyi değiştiremez", err(creator, "news_admin_set_upgrade", p_name="NU8", p_height=4000000) == "admin_required")
+ns = rpc(admin, "news_admin_set_upgrade", p_name="NU8", p_height=4000000)
+check("yönetici sonraki yükseltmeyi girer", ns["next_upgrade"] == {"name": "NU8", "height": 4000000, "blocks_left": 4000000 - 3543500}, ns)
+
+# Anahtar kişiler
+check("anahtar kişi listesi yöneticiye açık", len(rpc(admin, "news_admin_people")) == 20)
+rpc(admin, "news_admin_save_person", p={"username": "newdev", "kind": "protocol", "affiliation": "Test"})
+rpc(admin, "news_admin_save_person", p={"username": "NEWDEV", "kind": "zcg"})
+pp = [p for p in rpc(admin, "news_admin_people") if p["username"].lower() == "newdev"]
+check("anahtar kişi büyük/küçük harf duyarsız güncellenir", len(pp) == 1 and pp[0]["kind"] == "zcg", pp)
+rpc(admin, "news_admin_delete_person", p_username="newdev")
+check("üye anahtar kişi ekleyemez", err(creator, "news_admin_save_person", p={"username": "x"}) == "admin_required")
+
+# Özet yazımı ve yayın
+DIG = {"base_lang": "en", "items": [
+    {"section": "upgrade", "tier": "lead", "url": "https://github.com/ZcashFoundation/zebra/releases", "source_name": "Zcash Foundation",
+     "verified": True, "source_item_id": items[0]["id"], "related_slug": "network-upgrades"},
+    {"section": "governance", "tier": "brief", "url": "https://forum.zcashcommunity.com/t/x/2", "source_name": "Zcash Forum",
+     "kind": "statement", "attribution": "zerodartz (ZCG)", "verified": False}],
+    "texts": {"en": {"title": "NU7 day", "items": [{"title": "NU7", "summary": "Activates.", "facts": [{"value": "75 → 25 s", "label": "Block time"}]},
+                                                   {"title": "Opinion", "summary": "zerodartz said …"}]}}}
+check("üye özet kaydedemez", err(creator, "news_admin_save_digest", p_date=ND, p=DIG) == "admin_required")
+check("iki manşet reddedilir", err(admin, "news_admin_save_digest", p_date=ND,
+      p=dict(DIG, items=[dict(DIG["items"][0]), dict(DIG["items"][0])])) == "one_lead_only")
+check("kaynak bağlantısı zorunlu", err(admin, "news_admin_save_digest", p_date=ND,
+      p=dict(DIG, items=[dict(DIG["items"][0], url="javascript:alert(1)")])) == "invalid_url")
+saved = rpc(admin, "news_admin_save_digest", p_date=ND, p=DIG)
+ids = [i["id"] for i in saved["items"]]
+check("özet taslak olarak kaydedilir", saved["status"] == "draft" and len(ids) == 2)
+check("taslak herkese görünmez", rpc(None, "get_digest", p_date=ND) is None and rpc(None, "get_latest_digest") is None)
+check("yönetici taslağı önizler", rpc(admin, "get_digest", p_date=ND)["title"] == "NU7 day")
+bad = dict(DIG, texts={"en": {"title": "NU7 day", "items": [{"title": "NU7", "summary": "x"}, {"title": "Opinion"}]}})
+rpc(admin, "news_admin_save_digest", p_date=ND, p=dict(bad, items=[dict(DIG["items"][0], id=ids[0]), dict(DIG["items"][1], id=ids[1])]))
+check("özeti eksik öğeyle yayın reddedilir", err(admin, "news_admin_set_status", p_date=ND, p_status="published") == "item_text_missing")
+DIG2 = dict(DIG, items=[dict(DIG["items"][0], id=ids[0]), dict(DIG["items"][1], id=ids[1])],
+            texts={"en": DIG["texts"]["en"], "tr": {"title": "NU7 günü", "items": [{"title": "NU7 kapıda", "summary": "Devreye giriyor."}]}})
+saved = rpc(admin, "news_admin_save_digest", p_date=ND, p=DIG2)
+check("öğe kimlikleri düzenlemede korunur", [i["id"] for i in saved["items"]] == ids)
+check("açıklama (statement) öğesi kaynağa atfedilir", saved["items"][1]["kind"] == "statement" and saved["items"][1]["attribution"])
+check("üye yayınlayamaz", err(creator, "news_admin_set_status", p_date=ND, p_status="published") == "admin_required")
+rpc(admin, "news_admin_set_status", p_date=ND, p_status="published")
+dg = rpc(None, "get_digest", p_date=ND, p_lang="en")
+check("yayınlanan özet herkese açık", dg and dg["status"] == "published" and len(dg["items"]) == 2)
+check("her öğede kaynak bağlantısı + doğrulama bayrağı", all(i["url"].startswith("https://") and "verified" in i for i in dg["items"]))
+check("ilişkili ders/sözlük slug'ı", dg["items"][0]["related_slug"] == "network-upgrades")
+tr = rpc(None, "get_digest", p_date=ND, p_lang="tr")
+check("Türkçe sürüm + eksik öğede İngilizceye dönüş", tr["lang"] == "tr" and tr["items"][0]["title"] == "NU7 kapıda"
+      and tr["items"][1]["title"] == "Opinion" and tr["items"][1]["translated"] is False, tr["items"])
+check("bilinmeyen dilde temel dile dönüş", rpc(None, "get_digest", p_date=ND, p_lang="ja")["lang"] == "en")
+lt = rpc(None, "get_latest_digest")
+check("get_latest_digest sözleşmesi: date/title/items[title,summary,section,url]",
+      lt["date"] == ND and lt["title"] == "NU7 day" and {"title", "summary", "section", "url"} <= set(lt["items"][0]), lt.keys())
+arch = rpc(None, "list_digests")
+check("arşiv listesi", arch[0]["date"] == ND and arch[0]["lead"]["title"] == "NU7" and arch[0]["item_count"] == 2, arch)
+check("yayındaki özet silinemez", err(admin, "news_admin_delete_digest", p_date=ND) == "not_found_or_published")
+check("okuma XP'si (news_read) bir kez verilir",
+      rpc(creator, "award_xp", p_source="news_read", p_ref=ND)["awarded"] == 5
+      and rpc(creator, "award_xp", p_source="news_read", p_ref=ND)["awarded"] == 0)
+
+# Çeviriler
+TRN = {"title": "Día de NU7", "intro": "Resumen", "items": {ids[0]: {"title": "NU7", "summary": "Se activa."}, "bogus": {"title": "x"}}}
+check("oyuncu çeviri gönderemez", err(other, "news_submit_translation", p_date=ND, p_lang="es", p=TRN) == "creator_required")
+check("anonim çeviri gönderemez", err(None, "news_submit_translation", p_date=ND, p_lang="es", p=TRN) is not None)
+check("geçersiz dil kodu reddedilir (çeviri)", err(creator, "news_submit_translation", p_date=ND, p_lang="Spanish", p=TRN) == "invalid_lang")
+check("temel dile çeviri reddedilir", err(creator, "news_submit_translation", p_date=ND, p_lang="en", p=TRN) == "base_language")
+sub = rpc(creator, "news_submit_translation", p_date=ND, p_lang="es", p=TRN)
+check("organizatör çevirisi onay bekler", sub["status"] == "pending")
+sub2 = rpc(creator, "news_submit_translation", p_date=ND, p_lang="es", p=dict(TRN, title="Día de NU7 (v2)"))
+check("yeniden gönderim aynı başvuruyu günceller", sub2["id"] == sub["id"])
+check("onaysız çeviri yayında görünmez", rpc(None, "get_digest", p_date=ND, p_lang="es")["lang"] == "en")
+check("organizatör kendi başvurularını görür", rpc(creator, "news_my_translations")[0]["status"] == "pending")
+pend = rpc(admin, "news_admin_translations")
+check("yönetici bekleyen çeviriyi görür", any(t["id"] == sub["id"] and t["submitter"]["username"] == "creator" for t in pend))
+check("bilinmeyen öğe anahtarları atılır", "bogus" not in pend[0]["items"])
+check("üye çeviri onaylayamaz", err(creator, "news_admin_review_translation", p_id=sub["id"], p_approve=True) == "admin_required")
+rpc(admin, "news_admin_review_translation", p_id=sub["id"], p_approve=True)
+es_d = rpc(None, "get_digest", p_date=ND, p_lang="es")
+check("onaylanan çeviri çevirmen adıyla yayında", es_d["lang"] == "es" and es_d["title"] == "Día de NU7 (v2)"
+      and es_d["translator"]["username"] == "creator", es_d.get("translator"))
+check("dil listesinde çevirmen görünür", any(l["lang"] == "es" and l["translator"] for l in es_d["languages"]))
+check("tekrar onay reddedilir", err(admin, "news_admin_review_translation", p_id=sub["id"], p_approve=True) == "already_reviewed")
+sub3 = rpc(creator, "news_submit_translation", p_date=ND, p_lang="pt-BR", p=TRN)
+rpc(admin, "news_admin_review_translation", p_id=sub3["id"], p_approve=False, p_note="Please complete all items")
+check("reddedilen çeviri yayına çıkmaz", rpc(None, "get_digest", p_date=ND, p_lang="pt-BR")["lang"] == "en")
+adm = rpc(admin, "news_submit_translation", p_date=ND, p_lang="de", p={"title": "NU7-Tag", "items": {ids[0]: {"title": "NU7", "summary": "Aktiv."}}})
+check("yönetici çevirisi doğrudan yayına çıkar", adm["status"] == "approved" and rpc(None, "get_digest", p_date=ND, p_lang="de")["lang"] == "de")
+rpc(admin, "news_admin_save_digest", p_date=ND, p=dict(DIG2, texts={"en": DIG["texts"]["en"]}))
+check("editör düzenlemesi çevirileri silmez", rpc(None, "get_digest", p_date=ND, p_lang="es")["lang"] == "es")
+check("temel dil sürümü silinemez", err(admin, "news_admin_delete_version", p_date=ND, p_lang="en") == "cannot_delete_base")
+rpc(admin, "news_admin_set_status", p_date=ND, p_status="draft")
+check("yayından kaldırılan özet gizlenir", rpc(None, "get_digest", p_date=ND) is None)
+check("yayında olmayan özete çeviri gönderilemez", err(creator, "news_submit_translation", p_date=ND, p_lang="fr", p=TRN) == "not_found")
+rpc(admin, "news_admin_set_status", p_date=ND, p_status="published")
+check("yönetici gün listesi", any(d["date"] == ND and d["status"] == "published" for d in rpc(admin, "news_admin_dates")))
+check("toplayıcı çalışma kaydı", len(rpc(admin, "news_admin_runs")) >= 2)
+# testin bıraktığı veriyi temizle (yerel tohum verisiyle çakışmasın)
+for q in ("delete from news_digests", "delete from news_translations", "delete from news_items", "delete from news_snapshots",
+          "delete from news_runs", "update news_settings set next_upgrade_name='NU7', next_upgrade_height=3543405"):
+    sql(q)
+
 print(f"\n{len(PASS)} geçti, {len(FAIL)} başarısız")
 if FAIL:
     print("BAŞARISIZ:", FAIL)

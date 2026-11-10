@@ -164,6 +164,27 @@ Doğru cevap = 500 + hıza göre 0–500 + art arda doğru serisi başına +100 
 - Cevap gösteriminde istemciler kendi sonuçlarını rastgele gecikmeyle (0–2 sn) çeker; binlerce oyuncu aynı anda sunucuya yüklenmez.
 - Çok büyük etkinliklerden önce `supabase/tests` ile yük testi yapmanı öneririz.
 
+## Gündem (günlük Zcash özeti)
+Her gün **00:00 UTC**'de Vercel Cron (`vercel.json`) `GET /api/cron/news` çağırır. Toplayıcı son 24 saati
+birincil kaynaklardan toplar (Zcash forumu Discourse JSON, GitHub sürümleri + `zcash/zips` birleşen PR'lar, ağ
+yüksekliği ve değer havuzları), her öğeyi puanlar (dökümü editöre gösterilir) ve servis rolüyle veritabanına
+yazar. **Hiçbir şey otomatik yayınlanmaz:** yönetici `/admin/news`'te öğeleri seçer, özetleri yazar, sıralar ve
+yayınlar. Organizatörler yayınlanmış bir özeti `/news/<tarih>/translate`'ten herhangi bir dile çevirebilir; yönetici
+onaylayınca çevirmen adıyla yayınlanır. Paylaşım kartı (1080×1350 PNG): `/news/<tarih>/card?lang=tr`.
+
+Vercel ortam değişkenleri (sunucu sırları — koda yazmayın):
+- `CRON_SECRET` — rastgele uzun bir değer. Vercel Cron isteğe `Authorization: Bearer $CRON_SECRET` ekler.
+- `SUPABASE_SERVICE_ROLE_KEY` — *Supabase → Project Settings → API → service_role*. Yalnızca cron rotası kullanır.
+- `ZCASH_RPC_URL` (isteğe bağlı) — zcashd/Zebra JSON-RPC adresi (`https://user:pass@host:8232` olabilir).
+  Havuz değerleri (`getblockchaininfo.valuePools`: transparent, sprout, sapling, orchard, ironwood, lockbox) buradan gelir.
+  Yoksa yalnızca blok yüksekliği Blockchair'den alınır; Blockchair havuz toplamlarını belgelemediği için havuzlar boş kalır (uydurulmaz).
+- `GITHUB_TOKEN` (isteğe bağlı) — GitHub API kota sınırını yükseltir (salt-okunur, kapsam gerektirmez).
+
+Elle çalıştırma / geçmiş gün: `curl -H "Authorization: Bearer $CRON_SECRET" "https://zeclearn.com/api/cron/news?date=2026-11-05"`
+(`&dry=1` yazmadan sonucu döndürür). Anahtar kişiler ve "sonraki ağ yükseltmesi" `/admin/news` → *Anahtar kişiler* /
+*Ağ ve toplayıcı* sekmelerinden düzenlenir. Örnek içerik: `psql -f supabase/seed/news_demo.sql` (5 Kasım 2026 sayısı).
+Toplayıcı testleri (ağ gerekmez, `lib/news/__fixtures__`): `npm run test:news`. Kart fontları: `python3 scripts/og-fonts.py`.
+
 ## Testler
 `supabase/tests/test_engine.py` — oyun motorunun 150 testi (roller, 10 saniye kuralı, quiz yaşam döngüsü, tablo erişim güvenliği, sunucu yönetimli ve planlı oyunlar, yenileme sonrası devam, süre aşımı, geç cevap, oyuncu çıkarma, ödüller, solo, liderlik, 60 eşzamanlı oyuncu). Supabase'i taklit eden yerel bir Postgres'te çalışır:
 ```bash

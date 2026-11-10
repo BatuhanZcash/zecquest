@@ -1,0 +1,13 @@
+{
+ "data": {
+  "blocks": 3543600,
+  "best_block_height": 3543599,
+  "circulation": 1630000000000000,
+  "mempool_transactions": 12
+ },
+ "context": {
+  "code": 200,
+  "source": "D",
+  "state": 3543599
+ }
+}

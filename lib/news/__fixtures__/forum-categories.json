@@ -1,0 +1,40 @@
+{
+ "category_list": {
+  "can_create_category": false,
+  "categories": [
+   {
+    "id": 5,
+    "name": "General",
+    "slug": "general",
+    "topic_count": 900
+   },
+   {
+    "id": 6,
+    "name": "Grants",
+    "slug": "grants",
+    "topic_count": 300,
+    "subcategory_list": [
+     {
+      "id": 7,
+      "name": "Zcash Community Grants",
+      "slug": "zcg",
+      "parent_category_id": 6,
+      "topic_count": 200
+     }
+    ]
+   },
+   {
+    "id": 10,
+    "name": "Zebra",
+    "slug": "zebra",
+    "topic_count": 120
+   },
+   {
+    "id": 11,
+    "name": "Ecosystem",
+    "slug": "ecosystem",
+    "topic_count": 400
+   }
+  ]
+ }
+}

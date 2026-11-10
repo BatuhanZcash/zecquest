@@ -1,0 +1,68 @@
+{
+ "id": 1003,
+ "title": "Coinholder grants round: proposal discussion",
+ "slug": "grants-round-proposal-discussion",
+ "posts_count": 44,
+ "highest_post_number": 44,
+ "created_at": "2026-10-20T10:00:00.000Z",
+ "category_id": 7,
+ "post_stream": {
+  "posts": [
+   {
+    "id": 341,
+    "name": "Jack Grigg",
+    "username": "str4d",
+    "post_number": 41,
+    "created_at": "2026-11-05T12:00:00.000Z",
+    "cooked": "<p>I think the proposal needs a clearer budget split before it goes to a vote.</p>",
+    "reply_to_post_number": null,
+    "actions_summary": [
+     {
+      "id": 2,
+      "count": 9
+     }
+    ]
+   },
+   {
+    "id": 342,
+    "name": null,
+    "username": "carol",
+    "post_number": 42,
+    "created_at": "2026-11-05T13:00:00.000Z",
+    "cooked": "<p>Agreed.</p>",
+    "reply_to_post_number": null,
+    "actions_summary": [
+     {
+      "id": 2,
+      "count": 1
+     }
+    ]
+   },
+   {
+    "id": 343,
+    "name": null,
+    "username": "zerodartz",
+    "post_number": 43,
+    "created_at": "2026-11-05T15:00:00.000Z",
+    "cooked": "<p>Speaking for myself, not the committee: I'd like to see milestones.</p>",
+    "reply_to_post_number": null,
+    "actions_summary": [
+     {
+      "id": 2,
+      "count": 4
+     }
+    ]
+   },
+   {
+    "id": 344,
+    "name": null,
+    "username": "proposer_x",
+    "post_number": 44,
+    "created_at": "2026-11-05T16:00:00.000Z",
+    "cooked": "<p>Thanks, I will update the proposal.</p>",
+    "reply_to_post_number": null,
+    "actions_summary": []
+   }
+  ]
+ }
+}
