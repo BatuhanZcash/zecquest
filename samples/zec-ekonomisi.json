@@ -37,12 +37,16 @@
         "en": "What is Zcash's target block time?"
       },
       "options": [
-        "10 sn",
+        "25 sn",
         "75 sn",
         "150 sn",
         "600 sn"
       ],
-      "correct": 1
+      "correct": 0,
+      "explanation": {
+        "tr": "NU7 (6 Kasım 2026) ile blok süresi 75 saniyeden 25 saniyeye indi. Blok ödülü de üçe bölündüğü için günlük yeni ZEC miktarı değişmedi.",
+        "en": "NU7 (6 November 2026) cut the block time from 75 to 25 seconds. The block subsidy was divided by three, so daily issuance stayed the same."
+      }
     },
     {
       "text": {
