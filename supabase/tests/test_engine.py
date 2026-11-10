@@ -649,6 +649,231 @@ for q in ("delete from news_digests", "delete from news_translations", "delete f
           "delete from news_runs", "update news_settings set next_upgrade_name='NU7', next_upgrade_height=3543405"):
     sql(q)
 
+ZEKI_COINS_1 = sql("select (public._game_level_limits('zeki', 1) ->> 'coins')::int")[0][0]
+
+# =====================================================================
+print("\n▶ Oyna: Zeki skorları (0010)")
+z1, z2 = new_user("zekiplayer"), new_user("zekirival")
+check("bilinmeyen bölüm reddedilir", err(z1, "submit_game_score", p_game="zeki", p_level=9, p_score=10, p_time_ms=60000, p_coins=0) == "unknown_level")
+check("anonim skor gönderemez", err(None, "submit_game_score", p_game="zeki", p_level=1, p_score=10, p_time_ms=60000, p_coins=0) is not None)
+check("imkânsız hızlı süre reddedilir", err(z1, "submit_game_score", p_game="zeki", p_level=1, p_score=3000, p_time_ms=3000, p_coins=5) == "implausible_score")
+check("azami puan üstü reddedilir", err(z1, "submit_game_score", p_game="zeki", p_level=1, p_score=999999, p_time_ms=60000, p_coins=5) == "implausible_score")
+check("bölümdeki paradan fazlası reddedilir", err(z1, "submit_game_score", p_game="zeki", p_level=1, p_score=3000, p_time_ms=60000, p_coins=500) == "implausible_score")
+check("negatif değerler reddedilir", err(z1, "submit_game_score", p_game="zeki", p_level=1, p_score=-5, p_time_ms=60000, p_coins=0) == "implausible_score")
+xp0 = sql("select xp from profiles where id=%s", z1)[0][0]
+r1 = rpc(z1, "submit_game_score", p_game="zeki", p_level=1, p_score=4000, p_time_ms=60000, p_coins=10, p_no_hit=False)
+check("geçerli koşu kaydedilir (bitirme yıldızı)", r1["best_score"] == 4000 and r1["stars"] == 1 and r1["new_best"] is True, r1)
+check("ilk bitirişte game_level XP'si verilir", r1["xp_awarded"] == 50 and sql("select xp from profiles where id=%s", z1)[0][0] == xp0 + 50, r1)
+check("art arda gönderim sınırlanır", err(z1, "submit_game_score", p_game="zeki", p_level=1, p_score=4100, p_time_ms=59000, p_coins=10) == "too_many_requests")
+sql("update game_runs set created_at = created_at - interval '10 seconds'")
+r2 = rpc(z1, "submit_game_score", p_game="zeki", p_level=1, p_score=3500, p_time_ms=40000, p_coins=ZEKI_COINS_1, p_no_hit=True)
+check("en iyi puan korunur, en iyi süre güncellenir", r2["best_score"] == 4000 and r2["best_time_ms"] == 40000 and r2["new_best"] is False, r2)
+check("yıldızlar birikir (tüm paralar + hasarsız)", r2["stars"] == 7 and r2["coins"] == ZEKI_COINS_1, r2)
+check("tüm paralar için game_stars XP'si, bitirme XP'si tekrar verilmez", r2["xp_awarded"] == 25, r2)
+check("XP olayları tekil", sql("select count(*) from xp_events where user_id=%s and ref='zeki:1'", z1)[0][0] == 2)
+sql("update game_runs set created_at = created_at - interval '10 seconds'")
+rpc(z2, "submit_game_score", p_game="zeki", p_level=1, p_score=5000, p_time_ms=50000, p_coins=20)
+zg = str(uuid.uuid4())
+sql("insert into auth.users (id, email, raw_user_meta_data, is_anonymous) values (%s, null, '{}', true)", zg)
+rpc(zg, "guest_start", p_name="Zeki Guest")
+gr = rpc(zg, "submit_game_score", p_game="zeki", p_level=1, p_score=6000, p_time_ms=30000, p_coins=ZEKI_COINS_1)
+check("misafir skoru kaydedilir ama sırası yok", gr["best_score"] == 6000 and gr["rank"] is None, gr)
+lb = rpc(None, "game_leaderboard", p_game="zeki", p_level=1, p_period="all")
+names = [r["username"] for r in lb["rows"]]
+check("bölüm liderliği sıralı (en iyi puan)", names[:2] == ["zekirival", "zekiplayer"], names)
+check("misafir herkese açık tabloda yok", all(r["display_name"] != "Zeki Guest" for r in lb["rows"]))
+check("kendi sıram döner", rpc(z1, "game_leaderboard", p_game="zeki", p_level=1, p_period="all")["me"]["rank"] == 2)
+sql("update game_runs set created_at = now() - interval '8 days' where user_id=%s", z2)
+wk = [r["username"] for r in rpc(None, "game_leaderboard", p_game="zeki", p_level=1, p_period="week")["rows"]]
+check("haftalık tablo yalnızca son 7 gün", wk == ["zekiplayer"], wk)
+prog = rpc(z1, "my_game_progress", p_game="zeki")
+check("kendi ilerlemem (seviye, yıldız, en iyi süre)",
+      prog == [{"level": 1, "best_score": 4000, "best_time_ms": 40000, "coins": ZEKI_COINS_1, "stars": 7, "runs": 2}], prog)
+check("tuhaf oyun adı güvenle reddedilir", err(z1, "submit_game_score", p_game="zeki'; --", p_level=1, p_score=1, p_time_ms=60000, p_coins=0) == "unknown_level")
+for role in ("anon", "authenticated"):
+    with psycopg.connect(DSN) as conn:
+        with conn.cursor() as c:
+            c.execute("set local role " + role)
+            try:
+                c.execute("select * from game_scores")
+                ok = False
+            except psycopg.Error:
+                ok = True
+    check(f"{role} oyun tablolarını doğrudan okuyamaz", ok)
+
+# =====================================================================
+print("\n▶ Arena: eşleştirme, sızıntı yok, puanlama, reyting")
+AQ = [{"text": {"tr": f"A{i}", "en": f"Arena {i}"}, "options": ["r", "w1", "w2", "w3"], "correct": 0,
+       "explanation": {"tr": f"Açıklama {i}", "en": f"Because {i}"}} for i in range(8)]
+aq = rpc(creator, "save_quiz", p={"slug": "arena-pool", "title": {"tr": "Arena", "en": "Arena"}, "questions": AQ})
+rpc(admin, "review_quiz", p_id=aq["id"], p_approve=True, p_note=None)
+# Test havuzu: yalnızca bu quiz yayında (doğru cevap hep 0)
+hidden = [r[0] for r in sql("select id from quizzes where id <> %s and status='published'", aq["id"])]
+sql("update quizzes set status='draft' where id = any(%s::uuid[])", hidden)
+a1, a2, a3 = new_user("arena_one"), new_user("arena_two"), new_user("arena_three")
+w1 = rpc(a1, "arena_find", p_lang="en")
+check("ilk oyuncu kuyrukta bekler", w1["status"] == "waiting" and w1["bot_after_ms"] == 8000, w1)
+m2 = rpc(a2, "arena_find", p_lang="en")
+check("ikinci oyuncu bekleyenle eşleşir", m2["status"] == "matched" and m2["bot"] is False, m2)
+m1 = rpc(a1, "arena_find", p_lang="en")
+check("bekleyen oyuncu aynı maça yönlendirilir", m1["status"] == "matched" and m1["match_id"] == m2["match_id"], m1)
+mid = m1["match_id"]
+check("üçüncü oyuncu dolu maça eklenmez", rpc(a3, "arena_find", p_lang="en")["status"] == "waiting")
+rpc(a3, "arena_cancel")
+check("kuyruktan çıkış", sql("select count(*) from arena_queue where user_id=%s", a3)[0][0] == 0)
+check("maça dışarıdan bakılamaz", err(a3, "arena_state", p_match=mid) == "forbidden")
+st = rpc(a1, "arena_state", p_match=mid)
+check("maç tanıtımla başlar", st["status"] == "intro" and st["question"] is None and st["opp"]["bot"] is False)
+check("soru az olan dil İngilizceye düşer", rpc(a3, "arena_find", p_lang="es")["lang"] == "en")
+rpc(a3, "arena_cancel")
+
+
+def expire_arena(m):
+    sql("update arena_matches set phase_ends_at = now() - interval '2 seconds' where id=%s", m)
+
+
+expire_arena(mid)
+s1 = rpc(a1, "arena_state", p_match=mid)
+s2 = rpc(a2, "arena_state", p_match=mid)
+check("iki oyuncu aynı soruyu görür", s1["status"] == "question" and s1["question"]["text"] == s2["question"]["text"], (s1["status"], s2["status"]))
+check("soru sırasında doğru cevap gönderilmez", '"correct"' not in json.dumps(s1) and s1["reveal"] is None, json.dumps(s1)[:300])
+check("10 sn kuralı", s1["question"]["time_limit"] == 10)
+check("geçersiz seçenek reddedilir", err(a1, "arena_answer", p_match=mid, p_q=0, p_choice=7) == "invalid_choice")
+check("yanlış soru indeksi kapalı", rpc(a1, "arena_answer", p_match=mid, p_q=3, p_choice=0)["accepted"] is False)
+ans = rpc(a1, "arena_answer", p_match=mid, p_q=0, p_choice=0)
+check("cevap yanıtı doğruluğu sızdırmaz", ans == {"accepted": True}, ans)
+check("ikinci cevap kabul edilmez", rpc(a1, "arena_answer", p_match=mid, p_q=0, p_choice=1)["reason"] == "already")
+s2 = rpc(a2, "arena_state", p_match=mid)
+check("rakibin cevap verdiği görünür, seçimi ve doğruluğu görünmez", s2["opp_answered"] is True and s2["my_choice"] is None
+      and '"correct"' not in json.dumps(s2) and "opp_choice" not in json.dumps(s2))
+rpc(a2, "arena_answer", p_match=mid, p_q=0, p_choice=2)
+s1 = rpc(a1, "arena_state", p_match=mid)
+check("iki cevap gelince açıklanır", s1["status"] == "reveal" and s1["reveal"]["correct"] == 0, s1["status"])
+check("doğru + hız bonusu puanı (100–150)", 100 <= s1["reveal"]["my_points"] <= 150 and s1["reveal"]["opp_points"] == 0, s1["reveal"])
+check("işaretler: ben doğru, rakip yanlış", s1["pips"] == [{"me": True, "opp": False}], s1["pips"])
+check("skor sunucuda hesaplanır", s1["me"]["score"] == s1["reveal"]["my_points"] and s1["opp"]["score"] == 0)
+sent = sql("select payload from realtime.sent where topic=%s order by id desc", "arena:" + mid)
+check("her değişiklik realtime ile duyurulur (yalnızca sürüm)", len(sent) >= 3 and set(sent[0][0].keys()) == {"version", "status"}, sent[:1])
+for qi in range(1, 5):
+    expire_arena(mid)
+    st = rpc(a2, "arena_state", p_match=mid)
+    if qi == 4:
+        check("5. soru başlar", st["status"] == "question" and st["current_q"] == 4, st["status"])
+    rpc(a1, "arena_answer", p_match=mid, p_q=qi, p_choice=0)
+    if qi != 2:
+        rpc(a2, "arena_answer", p_match=mid, p_q=qi, p_choice=0 if qi % 2 else 3)
+    else:
+        expire_arena(mid)  # a2 cevap vermez, süre dolar
+    rpc(a1, "arena_state", p_match=mid)
+expire_arena(mid)
+end1 = rpc(a1, "arena_state", p_match=mid)
+end2 = rpc(a2, "arena_state", p_match=mid)
+check("5 sorudan sonra maç biter, kazanan doğru", end1["status"] == "ended" and end1["winner"] == end1["me"]["slot"], (end1["status"], end1.get("winner")))
+r_a1 = sql("select rating, wins, streak from arena_ratings where user_id=%s", a1)[0]
+r_a2 = sql("select rating, losses, streak from arena_ratings where user_id=%s", a2)[0]
+check("Elo: eşit reytingde ±16", r_a1 == (1016, 1, 1) and r_a2 == (984, 1, 0), (r_a1, r_a2))
+check("sonuç: reyting farkı, lig, seri", end1["result"]["delta"] == 16 and end1["result"]["league"] == "bronze" and end1["result"]["streak"] == 1, end1["result"])
+check("sonuç: kaybeden -16", end2["result"]["delta"] == -16 and end2["result"]["outcome"] == -1, end2["result"])
+check("rozetler: kusursuz + ilk galibiyet", {"perfect", "first_win"} <= set(end1["result"]["badges"]), end1["result"]["badges"])
+check("kaçırılan soru açıklamasıyla gelir", any(not q["my_correct"] and q["explanation"] for q in end2["result"]["questions"]))
+check("galibiyet XP'si (günde ilk 3)", end1["result"]["xp"] == 10 and sql("select count(*) from xp_events where user_id=%s and source='arena_win'", a1)[0][0] == 1)
+check("bitmiş maçta cevap kabul edilmez", rpc(a1, "arena_answer", p_match=mid, p_q=4, p_choice=0)["accepted"] is False)
+lbw = rpc(None, "arena_leaderboard", p_period="week")
+check("haftalık arena sıralaması (puan)", [r["username"] for r in lbw["rows"]][:2] == ["arena_one", "arena_two"], lbw["rows"])
+lba = rpc(a2, "arena_leaderboard", p_period="all")
+check("tüm zamanlar: reyting ve lig", lba["rows"][0]["value"] == 1016 and lba["rows"][0]["league"] == "bronze" and lba["me"]["rank"] == 2, lba)
+me1 = rpc(a1, "my_arena")
+check("lobi verisi", me1["rating"] == 1016 and me1["wins"] == 1 and me1["rank"] == 1 and me1["weekly_rank"] == 1 and me1["active_match"] is None, me1)
+
+print("\n▶ Arena: pratik botu")
+b = rpc(a3, "arena_find", p_lang="en")
+check("rakip yoksa bekler", b["status"] == "waiting")
+sql("update arena_queue set joined_at = now() - interval '9 seconds' where user_id=%s", a3)
+b = rpc(a3, "arena_find", p_lang="en")
+check("~8 sn sonra pratik botuyla eşleşir", b["status"] == "matched" and b["bot"] is True, b)
+bid = b["match_id"]
+bm = sql("select bot, p2, p2_rating from arena_matches where id=%s", bid)[0]
+check("bot etiketli ve beceri eşleşmeli (1000 → %55)", bm[1] is None and bm[0]["name"] and float(bm[0]["acc"]) == 0.55 and bm[2] == 1000, bm)
+bs = rpc(a3, "arena_state", p_match=bid)
+check("istemci rakibin bot olduğunu bilir", bs["opp"]["bot"] is True and bs["opp"]["name"] == bm[0]["name"])
+expire_arena(bid)
+bs = rpc(a3, "arena_state", p_match=bid)
+check("bot cevabı düşünme süresi dolmadan görünmez", bs["status"] == "question" and bs["opp_answered"] is False, bs["opp_answered"])
+check("bot cevabı doğruyu sızdırmaz", '"correct"' not in json.dumps(bs))
+for qi in range(5):
+    # bot bazen (%5) cevap vermez: soru açılana kadar ilerlet
+    for _ in range(4):
+        cur = rpc(a3, "arena_state", p_match=bid)
+        if cur["status"] == "question" and cur["current_q"] == qi:
+            break
+        expire_arena(bid)
+    sql("update arena_answers set elapsed_ms = 0 where match_id=%s and slot=2", bid)
+    rpc(a3, "arena_answer", p_match=bid, p_q=qi, p_choice=0)
+    st = rpc(a3, "arena_state", p_match=bid)
+    if qi == 0:
+        nb = sql("select count(*) from arena_answers where match_id=%s and slot=2 and q_index=0", bid)[0][0]
+        check("bot ve oyuncu cevaplayınca açıklanır", st["status"] == "reveal" or nb == 0, st["status"])
+expire_arena(bid)
+be = rpc(a3, "arena_state", p_match=bid)
+check("bot maçı biter", be["status"] == "ended")
+check("bota karşı K=16 (eşit reytingde en fazla ±8)", abs(be["result"]["delta"]) <= 8, be["result"])
+check("bot maçı haftalık puana sayılır", rpc(a3, "my_arena")["weekly_points"] == be["me"]["score"])
+pro = new_user("arena_pro")
+sql("insert into arena_ratings (user_id, rating, matches) values (%s, 1500, 10)", pro)
+rpc(pro, "arena_find", p_lang="en")
+sql("update arena_queue set joined_at = now() - interval '9 seconds' where user_id=%s", pro)
+hb = rpc(pro, "arena_find", p_lang="en")
+hbot = sql("select bot from arena_matches where id=%s", hb["match_id"])[0][0]
+check("güçlü oyuncuya güçlü bot (isabet ve hız)", float(hbot["acc"]) == 0.85 and hbot["speed_ms"] == 4500, hbot)
+
+print("\n▶ Arena: terk edilen maç, bayat kuyruk, eşzamanlılık, misafir")
+sql("update arena_matches set phase_started_at = now() - interval '3 minutes' where id=%s", hb["match_id"])
+back = rpc(pro, "arena_find", p_lang="en")
+check("terk edilmiş maç kapanır, oyuncu yeniden kuyruğa girer", back["status"] == "waiting"
+      and sql("select status from arena_matches where id=%s", hb["match_id"])[0][0] == "ended", back)
+rpc(pro, "arena_cancel")
+ghost = new_user("arena_ghost")
+rpc(ghost, "arena_find", p_lang="en")
+sql("update arena_queue set seen_at = now() - interval '20 seconds' where user_id=%s", ghost)
+lone = new_user("arena_lone")
+check("sekmeyi kapatmış (bayat) oyuncuyla eşleşilmez", rpc(lone, "arena_find", p_lang="en")["status"] == "waiting")
+rpc(lone, "arena_cancel")
+crowd_a = [new_user(f"arena_c{i}") for i in range(10)]
+errs = []
+
+
+def finder(u):
+    for _ in range(3):
+        try:
+            rpc(u, "arena_find", p_lang="en")
+        except Exception as e:
+            errs.append(str(e))
+
+
+ths = [threading.Thread(target=finder, args=(u,)) for u in crowd_a]
+for t in ths: t.start()
+for t in ths: t.join()
+dup = sql("""select u, count(*) from (select p1 u from arena_matches where status <> 'ended' union all
+             select p2 from arena_matches where status <> 'ended' and p2 is not null) x group by u having count(*) > 1""")
+paired = sql("select count(*) from arena_matches where status <> 'ended' and p2 = any(%s::uuid[])", crowd_a)[0][0]
+check("eşzamanlı aramada hata yok", not errs, errs[:2])
+check("hiçbir oyuncu iki maça düşmez", dup == [] and paired == 5, (dup, paired))
+ag = str(uuid.uuid4())
+sql("insert into auth.users (id, email, raw_user_meta_data, is_anonymous) values (%s, null, '{}', true)", ag)
+check("adsız misafir arena oynayamaz", err(ag, "arena_find", p_lang="en") == "guest_name_required")
+rpc(ag, "guest_start", p_name="Arena Guest")
+rpc(ag, "arena_find", p_lang="en")
+sql("update arena_queue set joined_at = now() - interval '9 seconds' where user_id=%s", ag)
+gm = rpc(ag, "arena_find", p_lang="en")
+check("misafir arena oynayabilir", gm["status"] == "matched")
+sql("update arena_matches set phase_started_at = now() - interval '3 minutes' where id=%s", gm["match_id"])
+rpc(ag, "arena_state", p_match=gm["match_id"])
+check("misafir arena tablolarında görünmez", all(r["display_name"] != "Arena Guest" for p in ("week", "all")
+      for r in rpc(None, "arena_leaderboard", p_period=p, p_limit=100)["rows"]))
+check("anonim arena oynayamaz", err(None, "arena_find", p_lang="en") is not None)
+check("anonim çevrimiçi sayısını görebilir", isinstance(rpc(None, "arena_online"), int))
+sql("update quizzes set status='published' where id = any(%s::uuid[])", hidden)
+
 print(f"\n{len(PASS)} geçti, {len(FAIL)} başarısız")
 if FAIL:
     print("BAŞARISIZ:", FAIL)
